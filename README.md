@@ -1,18 +1,49 @@
 # Librería Online — Documentación del Proyecto
 
-Aplicación web monolítica para gestionar un catálogo de libros con autores, categorías, imágenes y conceptos asociados. Construida con Node.js + Express y PostgreSQL.
+Aplicación web monolítica para gestionar un catálogo de libros con autores, categorías, imágenes y conceptos asociados. Construida con Node.js + Express y PostgreSQL, siguiendo el patrón **MVC** organizado por módulos.
 
 ---
 
 ## Tabla de contenidos
 
-1. [Estructura de archivos](#estructura-de-archivos)
-2. [Configuración y arranque](#configuración-y-arranque)
-3. [Base de datos](#base-de-datos)
-4. [Rutas y endpoints](#rutas-y-endpoints)
-5. [Autenticación y roles](#autenticación-y-roles)
-6. [Subida de imágenes](#subida-de-imágenes)
-7. [Estilos](#estilos)
+1. [Arquitectura](#arquitectura)
+2. [Estructura de archivos](#estructura-de-archivos)
+3. [Configuración y arranque](#configuración-y-arranque)
+4. [Base de datos](#base-de-datos)
+5. [Rutas y endpoints](#rutas-y-endpoints)
+6. [Autenticación y roles](#autenticación-y-roles)
+7. [Subida de imágenes](#subida-de-imágenes)
+8. [Cómo agregar un módulo nuevo](#cómo-agregar-un-módulo-nuevo)
+9. [Estilos](#estilos)
+
+---
+
+## Arquitectura
+
+El proyecto aplica tres decisiones de diseño combinadas:
+
+| Decisión | Descripción |
+|---|---|
+| **Monolito** | Una sola aplicación Node.js desplegable; sin microservicios ni APIs separadas |
+| **MVC** | Cada módulo separa responsabilidades en Model · Views · Controller · Routes |
+| **Organización por módulos** | El código se agrupa por dominio (libros, autores…), no por tipo de archivo |
+
+### Flujo de una petición HTTP
+
+```
+Petición HTTP
+  → express-session      (sesión en memoria)
+  → express.urlencoded   (parseo de formularios)
+  → express.static       (archivos en /public)
+  → *.routes.js          (mapea URL → función de controller)
+    → requireLogin / requireAdmin  (src/shared/middleware.js)
+    → *.controller.js    (orquesta: llama al model y pasa datos a la view)
+      → *.model.js       (consultas SQL a PostgreSQL vía db.js)
+      → *.views.js       (genera el HTML como string y lo devuelve)
+    → res.send(HTML) o res.redirect(...)
+```
+
+> Las vistas no usan motor de plantillas (Pug, EJS, etc.). Cada `*.views.js` genera HTML con template literals. El helper `src/shared/layout.js` evita repetir el `<html>/<head>/<body>` en cada vista.
 
 ---
 
@@ -20,40 +51,66 @@ Aplicación web monolítica para gestionar un catálogo de libros con autores, c
 
 ```
 ejercicio_guiado2/
-├── index.js              # Punto de entrada: configura Express y registra las rutas
-├── db.js                 # Pool de conexión a PostgreSQL (pg)
-├── schema.sql            # DDL: CREATE TABLE de todas las tablas
-├── demo.sql              # Datos de prueba (autores, libros, conceptos, usuarios)
+├── index.js                          # Entrada: configura Express y registra los módulos
+├── db.js                             # Pool de conexión a PostgreSQL (pg)
+├── schema.sql                        # DDL: CREATE TABLE de todas las tablas
+├── demo.sql                          # Datos de prueba (autores, libros, conceptos, usuarios)
 ├── package.json
 ├── public/
 │   ├── css/
-│   │   └── style.css     # Hoja de estilos global (una sola, compartida por todas las vistas)
-│   └── uploads/          # Imágenes subidas por Multer (servidas como estáticos)
-└── routes/
-    ├── middleware.js      # Funciones requireLogin y requireAdmin
-    ├── auth.js            # Login, registro y logout
-    ├── libros.js          # CRUD completo de libros (ruta base: /libros)
-    ├── autores.js         # CRUD completo de autores (ruta base: /autores)
-    ├── categorias.js      # CRUD completo de categorías (ruta base: /categorias)
-    ├── conceptos.js       # CRUD de conceptos ligados a un libro (ruta base: /conceptos)
-    ├── imagenes.js        # Subida y borrado de imágenes de libros (ruta base: /imagenes)
-    └── usuarios.js        # CRUD de usuarios (ruta base: /usuarios)
+│   │   └── style.css                 # Hoja de estilos global compartida por todas las vistas
+│   └── uploads/                      # Imágenes subidas por Multer (servidas como estáticos)
+└── src/
+    ├── shared/
+    │   ├── layout.js                 # Helper page(title, content) → HTML completo
+    │   └── middleware.js             # requireLogin y requireAdmin
+    └── modules/
+        ├── auth/
+        │   ├── auth.model.js         # findByEmail, createUser, verifyPassword
+        │   ├── auth.views.js         # loginView, registroView
+        │   ├── auth.controller.js    # getLogin, postLogin, getRegistro, postRegistro, getLogout
+        │   └── auth.routes.js        # GET/POST /, /login, /registro, /logout
+        ├── libros/
+        │   ├── libros.model.js       # getAll, getById, getImagenes, getConceptos, create, update, remove
+        │   ├── libros.views.js       # listaView, formularioView, detalleView
+        │   ├── libros.controller.js  # getLista, getNuevo, postCrear, getDetalle, getEditar, postActualizar, postEliminar
+        │   └── libros.routes.js      # CRUD /libros
+        ├── autores/
+        │   ├── autores.model.js      # getAll, getById, create, update, remove
+        │   ├── autores.views.js      # listaView, formularioView
+        │   ├── autores.controller.js # getLista, getNuevo, postCrear, getEditar, postActualizar, postEliminar
+        │   └── autores.routes.js     # CRUD /autores
+        ├── categorias/
+        │   ├── categorias.model.js
+        │   ├── categorias.views.js
+        │   ├── categorias.controller.js
+        │   └── categorias.routes.js  # CRUD /categorias
+        ├── conceptos/
+        │   ├── conceptos.model.js    # getById, create, update, remove
+        │   ├── conceptos.views.js    # formularioNuevoView, formularioEditarView
+        │   ├── conceptos.controller.js
+        │   └── conceptos.routes.js   # CRUD /conceptos (ligado a un libro)
+        ├── imagenes/
+        │   ├── imagenes.model.js     # create (con lógica de es_principal), remove
+        │   ├── imagenes.views.js     # formularioView
+        │   ├── imagenes.controller.js # configura Multer + getNuevo, postSubir, postEliminar
+        │   └── imagenes.routes.js    # POST /imagenes/:libro_id (con uploadMiddleware)
+        └── usuarios/
+            ├── usuarios.model.js     # getAll, getById, create, update (rehash opcional), remove
+            ├── usuarios.views.js     # listaView, formularioView
+            ├── usuarios.controller.js
+            └── usuarios.routes.js    # CRUD /usuarios
 ```
 
-### Flujo general en `index.js`
+### Responsabilidad de cada capa MVC
 
-```
-Petición HTTP
-  → express-session (sesión en memoria)
-  → express.urlencoded (parseo de formularios)
-  → express.static (archivos en /public)
-  → Router correspondiente (auth / libros / autores / ...)
-    → middleware requireLogin / requireAdmin (si aplica)
-    → Consulta a PostgreSQL vía db.js
-    → res.send(HTML) o res.redirect(...)
-```
-
-> Las vistas **no usan un motor de plantillas** (Pug, EJS, etc.). Cada ruta construye el HTML como template literal directamente en el archivo de ruta.
+| Capa | Archivo | Responsabilidad |
+|---|---|---|
+| **Model** | `*.model.js` | Todo el SQL. Devuelve datos puros. No conoce HTTP ni HTML |
+| **View** | `*.views.js` | Genera strings HTML a partir de datos. No hace queries |
+| **Controller** | `*.controller.js` | Orquesta: llama al model, pasa resultado a la view, envía respuesta |
+| **Routes** | `*.routes.js` | Solo mapea método HTTP + URL → función del controller (+ middleware) |
+| **Shared** | `src/shared/` | `layout.js` (wrapper HTML) y `middleware.js` (guards de sesión) |
 
 ---
 
@@ -66,13 +123,13 @@ Petición HTTP
 
 ### Variables de conexión (`db.js`)
 
-| Parámetro  | Valor actual     | Cómo cambiarlo                    |
-|------------|------------------|-----------------------------------|
-| `user`     | `libreria_user`  | Editar `db.js` línea 4            |
-| `host`     | `localhost`      | Editar `db.js` línea 5            |
-| `database` | `libreria_db`    | Editar `db.js` línea 6            |
-| `password` | `666`            | Editar `db.js` línea 7            |
-| `port`     | `5432`           | Editar `db.js` línea 8            |
+| Parámetro  | Valor actual    | Cómo cambiarlo       |
+|------------|-----------------|----------------------|
+| `user`     | `libreria_user` | Editar `db.js` línea 4 |
+| `host`     | `localhost`     | Editar `db.js` línea 5 |
+| `database` | `libreria_db`   | Editar `db.js` línea 6 |
+| `password` | `666`           | Editar `db.js` línea 7 |
+| `port`     | `5432`          | Editar `db.js` línea 8 |
 
 > Para producción se recomienda mover estas credenciales a variables de entorno con `dotenv`.
 
@@ -96,6 +153,8 @@ node index.js
 ---
 
 ## Base de datos
+
+El esquema se define en [`schema.sql`](schema.sql) y no fue modificado por el refactor.
 
 ### Diagrama de relaciones
 
@@ -130,7 +189,7 @@ imagenes_libros
   libro_id      → libros(id)      ON DELETE CASCADE
   ruta_archivo                   ← nombre del archivo en /public/uploads/
   descripcion
-  es_principal  ← BOOLEAN, solo una imagen puede ser principal por libro
+  es_principal  ← BOOLEAN, solo una puede ser principal por libro
 
 conceptos
   id (PK)
@@ -142,7 +201,7 @@ conceptos
 ### Detalles de cada tabla
 
 #### `usuarios`
-- `rol` controla el acceso: `'lector'` solo puede leer/editar; `'admin'` tiene acceso a todo (la distinción actual solo está en `requireAdmin` del middleware).
+- `rol` controla el acceso: `'lector'` o `'admin'`.
 - `password_hash` usa **bcrypt** con 10 rondas de sal.
 
 #### `libros`
@@ -150,90 +209,90 @@ conceptos
 - `imagenes_libros` y `conceptos` se borran en **CASCADE** al eliminar el libro.
 
 #### `imagenes_libros`
-- `ruta_archivo` solo guarda el **nombre del archivo** (ej. `1718000000000.jpg`), no la ruta completa. La URL pública es `/uploads/<ruta_archivo>`.
-- Al marcar una imagen como `es_principal=TRUE` la ruta primero pone todas las demás en `FALSE` antes de insertar la nueva.
+- `ruta_archivo` guarda solo el **nombre del archivo** (ej. `1718000000000.jpg`). La URL pública es `/uploads/<ruta_archivo>`.
+- Al marcar `es_principal=TRUE`, el model primero pone todas las demás en `FALSE` (`imagenes.model.js`).
 
 #### `conceptos`
-- Son glosarios específicos de cada libro (término + definición).
-- No tienen su propia página de listado; se muestran en la vista de detalle del libro (`GET /libros/:id`).
+- Glosario específico de cada libro (término + definición).
+- No tienen listado propio; se muestran en la vista de detalle del libro (`GET /libros/:id`).
 
 ---
 
 ## Rutas y endpoints
 
-### Autenticación (`routes/auth.js`)
+### Autenticación (`src/modules/auth/`)
 
-| Método | Ruta        | Descripción                                      |
-|--------|-------------|--------------------------------------------------|
-| GET    | `/`         | Redirige a `/libros` si hay sesión, si no a `/login` |
-| GET    | `/login`    | Formulario de inicio de sesión                   |
-| POST   | `/login`    | Valida credenciales con bcrypt, crea sesión      |
-| GET    | `/registro` | Formulario de registro de nuevo usuario          |
-| POST   | `/registro` | Inserta usuario con hash de contraseña           |
-| GET    | `/logout`   | Destruye la sesión y redirige a `/login`         |
+| Método | Ruta        | Controller            | Descripción                              |
+|--------|-------------|-----------------------|------------------------------------------|
+| GET    | `/`         | `getRoot`             | Redirige a `/libros` o `/login`          |
+| GET    | `/login`    | `getLogin`            | Formulario de inicio de sesión           |
+| POST   | `/login`    | `postLogin`           | Valida credenciales, crea sesión         |
+| GET    | `/registro` | `getRegistro`         | Formulario de registro                   |
+| POST   | `/registro` | `postRegistro`        | Inserta usuario con hash de contraseña   |
+| GET    | `/logout`   | `getLogout`           | Destruye la sesión                       |
 
-### Libros (`routes/libros.js`) — requiere `requireLogin`
+### Libros (`src/modules/libros/`) — requiere `requireLogin`
 
-| Método | Ruta                  | Descripción                                           |
-|--------|-----------------------|-------------------------------------------------------|
-| GET    | `/libros`             | Lista todos los libros (con JOIN a autores y categorías) |
-| GET    | `/libros/nuevo`       | Formulario de creación                                |
-| POST   | `/libros`             | Inserta un libro nuevo                                |
-| GET    | `/libros/:id`         | Detalle del libro + imágenes + conceptos              |
-| GET    | `/libros/:id/editar`  | Formulario de edición                                 |
-| POST   | `/libros/:id/editar`  | Actualiza el libro                                    |
-| POST   | `/libros/:id/eliminar`| Elimina el libro (cascade borra imágenes y conceptos) |
+| Método | Ruta                   | Controller       | Descripción                                        |
+|--------|------------------------|------------------|----------------------------------------------------|
+| GET    | `/libros`              | `getLista`       | Lista todos los libros (JOIN autores + categorías) |
+| GET    | `/libros/nuevo`        | `getNuevo`       | Formulario de creación                             |
+| POST   | `/libros`              | `postCrear`      | Inserta libro nuevo                                |
+| GET    | `/libros/:id`          | `getDetalle`     | Detalle + imágenes + conceptos del libro           |
+| GET    | `/libros/:id/editar`   | `getEditar`      | Formulario de edición                              |
+| POST   | `/libros/:id/editar`   | `postActualizar` | Actualiza el libro                                 |
+| POST   | `/libros/:id/eliminar` | `postEliminar`   | Elimina libro (cascade: imágenes y conceptos)      |
 
-### Autores (`routes/autores.js`) — requiere `requireLogin`
+### Autores (`src/modules/autores/`) — requiere `requireLogin`
 
-| Método | Ruta                   | Descripción            |
-|--------|------------------------|------------------------|
-| GET    | `/autores`             | Lista todos los autores |
-| GET    | `/autores/nuevo`       | Formulario de creación  |
-| POST   | `/autores`             | Inserta autor           |
-| GET    | `/autores/:id/editar`  | Formulario de edición   |
-| POST   | `/autores/:id/editar`  | Actualiza autor         |
-| POST   | `/autores/:id/eliminar`| Elimina autor           |
+| Método | Ruta                    | Controller       | Descripción          |
+|--------|-------------------------|------------------|----------------------|
+| GET    | `/autores`              | `getLista`       | Lista autores        |
+| GET    | `/autores/nuevo`        | `getNuevo`       | Formulario creación  |
+| POST   | `/autores`              | `postCrear`      | Inserta autor        |
+| GET    | `/autores/:id/editar`   | `getEditar`      | Formulario edición   |
+| POST   | `/autores/:id/editar`   | `postActualizar` | Actualiza autor      |
+| POST   | `/autores/:id/eliminar` | `postEliminar`   | Elimina autor        |
 
-### Categorías (`routes/categorias.js`) — requiere `requireLogin`
+### Categorías (`src/modules/categorias/`) — requiere `requireLogin`
 
-| Método | Ruta                      | Descripción               |
-|--------|---------------------------|---------------------------|
-| GET    | `/categorias`             | Lista todas las categorías |
-| GET    | `/categorias/nuevo`       | Formulario de creación     |
-| POST   | `/categorias`             | Inserta categoría          |
-| GET    | `/categorias/:id/editar`  | Formulario de edición      |
-| POST   | `/categorias/:id/editar`  | Actualiza categoría        |
-| POST   | `/categorias/:id/eliminar`| Elimina categoría          |
+| Método | Ruta                       | Controller       | Descripción            |
+|--------|----------------------------|------------------|------------------------|
+| GET    | `/categorias`              | `getLista`       | Lista categorías       |
+| GET    | `/categorias/nuevo`        | `getNuevo`       | Formulario creación    |
+| POST   | `/categorias`              | `postCrear`      | Inserta categoría      |
+| GET    | `/categorias/:id/editar`   | `getEditar`      | Formulario edición     |
+| POST   | `/categorias/:id/editar`   | `postActualizar` | Actualiza categoría    |
+| POST   | `/categorias/:id/eliminar` | `postEliminar`   | Elimina categoría      |
 
-### Conceptos (`routes/conceptos.js`) — requiere `requireLogin`
+### Conceptos (`src/modules/conceptos/`) — requiere `requireLogin`
 
-| Método | Ruta                        | Descripción                                      |
-|--------|-----------------------------|--------------------------------------------------|
-| GET    | `/conceptos/nuevo/:libro_id`| Formulario de nuevo concepto ligado a un libro   |
-| POST   | `/conceptos/:libro_id`      | Inserta concepto y redirige al detalle del libro |
-| GET    | `/conceptos/:id/editar`     | Formulario de edición                            |
-| POST   | `/conceptos/:id/editar`     | Actualiza concepto y redirige al libro           |
-| POST   | `/conceptos/:id/eliminar`   | Elimina concepto y redirige al libro             |
+| Método | Ruta                          | Controller       | Descripción                              |
+|--------|-------------------------------|------------------|------------------------------------------|
+| GET    | `/conceptos/nuevo/:libro_id`  | `getNuevo`       | Formulario de nuevo concepto             |
+| POST   | `/conceptos/:libro_id`        | `postCrear`      | Inserta concepto, redirige al libro      |
+| GET    | `/conceptos/:id/editar`       | `getEditar`      | Formulario de edición                    |
+| POST   | `/conceptos/:id/editar`       | `postActualizar` | Actualiza concepto, redirige al libro    |
+| POST   | `/conceptos/:id/eliminar`     | `postEliminar`   | Elimina concepto, redirige al libro      |
 
-### Imágenes (`routes/imagenes.js`) — requiere `requireLogin`
+### Imágenes (`src/modules/imagenes/`) — requiere `requireLogin`
 
-| Método | Ruta                       | Descripción                                         |
-|--------|----------------------------|-----------------------------------------------------|
-| GET    | `/imagenes/nuevo/:libro_id`| Formulario de subida de imagen                      |
-| POST   | `/imagenes/:libro_id`      | Sube archivo con Multer y registra en BD            |
-| POST   | `/imagenes/:id/eliminar`   | Elimina el registro de BD (no borra el archivo físico) |
+| Método | Ruta                        | Controller    | Descripción                                         |
+|--------|-----------------------------|---------------|-----------------------------------------------------|
+| GET    | `/imagenes/nuevo/:libro_id` | `getNuevo`    | Formulario de subida de imagen                      |
+| POST   | `/imagenes/:libro_id`       | `postSubir`   | Sube archivo (Multer) y registra en BD              |
+| POST   | `/imagenes/:id/eliminar`    | `postEliminar`| Elimina registro de BD (no borra el archivo físico) |
 
-### Usuarios (`routes/usuarios.js`) — requiere `requireLogin`
+### Usuarios (`src/modules/usuarios/`) — requiere `requireLogin`
 
-| Método | Ruta                      | Descripción                                        |
-|--------|---------------------------|----------------------------------------------------|
-| GET    | `/usuarios`               | Lista todos los usuarios                            |
-| GET    | `/usuarios/nuevo`         | Formulario de creación con selección de rol        |
-| POST   | `/usuarios`               | Inserta usuario con hash                           |
-| GET    | `/usuarios/:id/editar`    | Formulario de edición (contraseña opcional)        |
-| POST   | `/usuarios/:id/editar`    | Actualiza; solo rehashea si se envía contraseña    |
-| POST   | `/usuarios/:id/eliminar`  | Elimina usuario                                    |
+| Método | Ruta                      | Controller       | Descripción                                      |
+|--------|---------------------------|------------------|--------------------------------------------------|
+| GET    | `/usuarios`               | `getLista`       | Lista todos los usuarios                         |
+| GET    | `/usuarios/nuevo`         | `getNuevo`       | Formulario de creación con selección de rol      |
+| POST   | `/usuarios`               | `postCrear`      | Inserta usuario con hash                         |
+| GET    | `/usuarios/:id/editar`    | `getEditar`      | Formulario de edición (contraseña opcional)      |
+| POST   | `/usuarios/:id/editar`    | `postActualizar` | Actualiza; solo rehashea si se envía contraseña  |
+| POST   | `/usuarios/:id/eliminar`  | `postEliminar`   | Elimina usuario                                  |
 
 ---
 
@@ -246,41 +305,65 @@ El sistema usa **`express-session`** con almacenamiento en memoria (se pierde al
 { id, nombre, rol }
 ```
 
-### Middleware (`routes/middleware.js`)
+### Middleware (`src/shared/middleware.js`)
 
-| Función        | Comportamiento                                                   |
-|----------------|------------------------------------------------------------------|
-| `requireLogin` | Redirige a `/login` si no hay sesión activa                      |
-| `requireAdmin` | Redirige a `/login` si no hay sesión; muestra error si `rol !== 'admin'` |
+| Función        | Comportamiento                                                          |
+|----------------|-------------------------------------------------------------------------|
+| `requireLogin` | Redirige a `/login` si no hay sesión activa                             |
+| `requireAdmin` | Redirige a `/login` si no hay sesión; error si `rol !== 'admin'`        |
 
-> `requireAdmin` está definido pero **no se usa en ninguna ruta actualmente** (todos los endpoints solo usan `requireLogin`). Si quieres proteger rutas para administradores, reemplaza `requireLogin` por `requireAdmin` en los routers correspondientes.
+> `requireAdmin` está definido pero **no se usa en ninguna ruta actualmente**. Para proteger una ruta para administradores, reemplaza `requireLogin` por `requireAdmin` en el archivo `*.routes.js` correspondiente.
 
 ### Roles disponibles
 
-| Rol      | Descripción                            |
-|----------|----------------------------------------|
-| `lector` | Valor por defecto al registrarse       |
-| `admin`  | Asignado manualmente en `/usuarios`    |
+| Rol      | Descripción                         |
+|----------|-------------------------------------|
+| `lector` | Valor por defecto al registrarse    |
+| `admin`  | Asignado manualmente en `/usuarios` |
 
 ---
 
 ## Subida de imágenes
 
-Gestionada con **Multer** en `routes/imagenes.js`.
+Gestionada con **Multer** en `src/modules/imagenes/imagenes.controller.js`.
 
 - **Destino:** `public/uploads/` (carpeta servida como estático)
 - **Nombre de archivo:** timestamp Unix + extensión original (ej. `1718000000000.jpg`)
 - **Formatos permitidos:** `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`
 - **Límite de tamaño:** ninguno configurado actualmente
 
-Para cambiar la carpeta de destino, editar línea 9 de `routes/imagenes.js`.  
+Para cambiar la carpeta de destino, editar la propiedad `destination` del `diskStorage` en `imagenes.controller.js`.  
 Para agregar límite de tamaño, añadir `limits: { fileSize: 5 * 1024 * 1024 }` al objeto de opciones de `multer()`.
+
+---
+
+## Cómo agregar un módulo nuevo
+
+Ejemplo: agregar un módulo `reseñas`.
+
+1. **BD** — añadir `CREATE TABLE reseñas (...)` en `schema.sql` y ejecutarlo.
+
+2. **Crear los 4 archivos del módulo:**
+
+```
+src/modules/reseñas/
+├── reseñas.model.js       ← funciones SQL (getAll, getById, create, update, remove)
+├── reseñas.views.js       ← funciones que devuelven HTML (listaView, formularioView…)
+├── reseñas.controller.js  ← orquesta model + views, exporta una función por endpoint
+└── reseñas.routes.js      ← importa controller y middleware, define GET/POST
+```
+
+3. **Registrar en `index.js`:**
+
+```js
+app.use('/reseñas', require('./src/modules/reseñas/reseñas.routes'));
+```
 
 ---
 
 ## Estilos
 
-Un único archivo CSS en [`public/css/style.css`](public/css/style.css). Todas las vistas lo enlazan con:
+Un único archivo CSS en [`public/css/style.css`](public/css/style.css). Todas las vistas lo reciben a través del helper `layout.js`, que inserta automáticamente:
 
 ```html
 <link rel="stylesheet" href="/css/style.css">
