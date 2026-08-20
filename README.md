@@ -121,17 +121,17 @@ ejercicio_guiado2/
 - Node.js ≥ 18
 - PostgreSQL ≥ 14
 
-### Variables de conexión (`db.js`)
+### Variables de entorno (`.env`)
 
-| Parámetro  | Valor actual    | Cómo cambiarlo       |
-|------------|-----------------|----------------------|
-| `user`     | `libreria_user` | Editar `db.js` línea 4 |
-| `host`     | `localhost`     | Editar `db.js` línea 5 |
-| `database` | `libreria_db`   | Editar `db.js` línea 6 |
-| `password` | `666`           | Editar `db.js` línea 7 |
-| `port`     | `5432`          | Editar `db.js` línea 8 |
+Las credenciales de la base de datos se configuran mediante un archivo `.env` en la raíz del proyecto. Este archivo **no se sube a git** (está en `.gitignore`).
 
-> Para producción se recomienda mover estas credenciales a variables de entorno con `dotenv`.
+| Variable      | Valor por defecto | Descripción              |
+|---------------|-------------------|--------------------------|
+| `DB_USER`     | `libreria_user`   | Usuario de PostgreSQL    |
+| `DB_HOST`     | `localhost`       | Host de la base de datos |
+| `DB_NAME`     | `libreria_db`     | Nombre de la base de datos |
+| `DB_PASSWORD` | `666`             | Contraseña del usuario   |
+| `DB_PORT`     | `5432`            | Puerto de PostgreSQL     |
 
 ### Pasos para levantar el proyecto
 
@@ -139,13 +139,22 @@ ejercicio_guiado2/
 # 1. Instalar dependencias
 npm install
 
-# 2. Crear la base de datos y las tablas
+# 2. Crear el archivo .env con las credenciales
+cat > .env << 'EOF'
+DB_USER=libreria_user
+DB_HOST=localhost
+DB_NAME=libreria_db
+DB_PASSWORD=666
+DB_PORT=5432
+EOF
+
+# 3. Crear la base de datos y las tablas
 psql -U libreria_user -d libreria_db -f schema.sql
 
-# 3. (Opcional) Cargar datos de prueba
+# 4. (Opcional) Cargar datos de prueba
 psql -U libreria_user -d libreria_db -f demo.sql
 
-# 4. Arrancar el servidor
+# 5. Arrancar el servidor
 node index.js
 # → http://localhost:3000
 ```
