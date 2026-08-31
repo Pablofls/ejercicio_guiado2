@@ -81,7 +81,14 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem;
           color: var(--tinta-suave); white-space: nowrap; }
 td.alerta { color: var(--peligro); font-weight: 700; }
-.acciones-celda { display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+/* Las acciones NO usan flex sobre el <td>: convertir una celda en contenedor
+   flex la saca del layout de tabla y deja de alinearse con el resto de la fila.
+   Se resuelve con elementos en línea, que sí respetan la celda. */
+.acciones-celda { white-space: nowrap; vertical-align: top; }
+.acciones-celda > a,
+.acciones-celda > form,
+.acciones-celda > span { display: inline-block; vertical-align: baseline; margin-right: 12px; }
+.acciones-celda > *:last-child { margin-right: 0; }
 
 /* --- Botones --------------------------------------------------------------- */
 .boton, button {
