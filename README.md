@@ -2,19 +2,23 @@
 
 Aplicación web monolítica para gestionar un catálogo de libros con autores, categorías, imágenes y conceptos asociados. Construida con Node.js + Express y PostgreSQL, siguiendo el patrón **MVC** organizado por módulos.
 
+> **El proyecto se hospeda en GCP y la base de datos vive ahí, en la máquina virtual.** No existe una base de datos local: todo cambio de esquema o de datos se escribe en `db/pending/` y solo es real cuando se ejecuta en la VM. Ver [Hosting en GCP](#hosting-en-gcp) y [Flujo de cambios en la base de datos](#flujo-de-cambios-en-la-base-de-datos).
+
 ---
 
 ## Tabla de contenidos
 
 1. [Arquitectura](#arquitectura)
-2. [Estructura de archivos](#estructura-de-archivos)
-3. [Configuración y arranque](#configuración-y-arranque)
-4. [Base de datos](#base-de-datos)
-5. [Rutas y endpoints](#rutas-y-endpoints)
-6. [Autenticación y roles](#autenticación-y-roles)
-7. [Subida de imágenes](#subida-de-imágenes)
-8. [Cómo agregar un módulo nuevo](#cómo-agregar-un-módulo-nuevo)
-9. [Estilos](#estilos)
+2. [Hosting en GCP](#hosting-en-gcp)
+3. [Estructura de archivos](#estructura-de-archivos)
+4. [Configuración y arranque](#configuración-y-arranque)
+5. [Base de datos](#base-de-datos)
+6. [Flujo de cambios en la base de datos](#flujo-de-cambios-en-la-base-de-datos)
+7. [Rutas y endpoints](#rutas-y-endpoints)
+8. [Autenticación y roles](#autenticación-y-roles)
+9. [Subida de imágenes](#subida-de-imágenes)
+10. [Cómo agregar un módulo nuevo](#cómo-agregar-un-módulo-nuevo)
+11. [Estilos](#estilos)
 
 ---
 
@@ -47,6 +51,26 @@ Petición HTTP
 
 ---
 
+## Hosting en GCP
+
+Tanto la aplicación como la base de datos corren en **Google Cloud Platform**, sobre una máquina virtual. PostgreSQL está instalado en esa misma VM.
+
+| Elemento | Ubicación |
+|---|---|
+| Aplicación Node.js | VM en GCP |
+| PostgreSQL | La misma VM |
+| Archivos subidos (`public/uploads/`) | Disco de la VM |
+| Credenciales (`.env`) | Solo en la VM, fuera de git |
+
+### Consecuencias prácticas
+
+- **No hay base de datos local.** El esquema real es el que corre en la VM. Un `CREATE TABLE` en `schema.sql` no existe hasta que se ejecuta allá.
+- **`DB_HOST` depende de desde dónde te conectes.** Con la app corriendo dentro de la VM es `localhost`. Para conectarte desde tu equipo hace falta la IP de la VM con el puerto de PostgreSQL abierto en el firewall, o un túnel SSH.
+- **Las imágenes viven en el disco de la VM**, no en Cloud Storage. Si la VM se recrea sin conservar el disco, se pierden.
+- El repositorio nunca guarda credenciales. El `.env` se crea a mano en la VM y está en `.gitignore`.
+
+---
+
 ## Estructura de archivos
 
 ```
@@ -56,6 +80,9 @@ ejercicio_guiado2/
 ├── schema.sql                        # DDL: CREATE TABLE de todas las tablas
 ├── demo.sql                          # Datos de prueba (autores, libros, conceptos, usuarios)
 ├── package.json
+├── db/                               # Cambios SQL versionados (ver flujo más abajo)
+│   ├── pending/                      # SQL escrito, aún NO ejecutado en la VM
+│   └── applied/                      # SQL ya ejecutado en la VM
 ├── public/
 │   ├── css/
 │   │   └── style.css                 # Hoja de estilos global compartida por todas las vistas
@@ -123,17 +150,19 @@ ejercicio_guiado2/
 
 ### Variables de entorno (`.env`)
 
-Las credenciales de la base de datos se configuran mediante un archivo `.env` en la raíz del proyecto. Este archivo **no se sube a git** (está en `.gitignore`).
+Las credenciales de la base de datos se configuran mediante un archivo `.env` en la raíz del proyecto. Este archivo **no se sube a git** (está en `.gitignore`) y `db.js` no define valores por defecto: sin `.env` la aplicación no conecta.
 
-| Variable      | Valor por defecto | Descripción              |
-|---------------|-------------------|--------------------------|
-| `DB_USER`     | `libreria_user`   | Usuario de PostgreSQL    |
-| `DB_HOST`     | `localhost`       | Host de la base de datos |
-| `DB_NAME`     | `libreria_db`     | Nombre de la base de datos |
-| `DB_PASSWORD` | `666`             | Contraseña del usuario   |
-| `DB_PORT`     | `5432`            | Puerto de PostgreSQL     |
+| Variable      | Valor en la VM    | Descripción                                                        |
+|---------------|-------------------|--------------------------------------------------------------------|
+| `DB_USER`     | `libreria_user`   | Usuario de PostgreSQL                                              |
+| `DB_HOST`     | `localhost`       | `localhost` desde la propia VM; la IP de la VM si te conectas desde fuera |
+| `DB_NAME`     | `libreria_db`     | Nombre de la base de datos                                         |
+| `DB_PASSWORD` | *(ver la VM)*     | Contraseña del usuario — no se documenta aquí                      |
+| `DB_PORT`     | `5432`            | Puerto de PostgreSQL                                               |
 
 ### Pasos para levantar el proyecto
+
+Los pasos 3 y 4 son solo para el **primer montaje** o para recrear el entorno desde cero. En la VM de GCP la base de datos ya existe: ahí el trabajo del día a día es el descrito en [Flujo de cambios en la base de datos](#flujo-de-cambios-en-la-base-de-datos).
 
 ```bash
 # 1. Instalar dependencias
@@ -144,11 +173,11 @@ cat > .env << 'EOF'
 DB_USER=libreria_user
 DB_HOST=localhost
 DB_NAME=libreria_db
-DB_PASSWORD=666
+DB_PASSWORD=tu_password
 DB_PORT=5432
 EOF
 
-# 3. Crear la base de datos y las tablas
+# 3. Crear la base de datos y las tablas (solo primer montaje)
 psql -U libreria_user -d libreria_db -f schema.sql
 
 # 4. (Opcional) Cargar datos de prueba
@@ -163,7 +192,7 @@ node index.js
 
 ## Base de datos
 
-El esquema se define en [`schema.sql`](schema.sql) y no fue modificado por el refactor.
+El esquema se define en [`schema.sql`](schema.sql). La base de datos real corre en la VM de GCP: `schema.sql` y el diagrama de esta sección son su documentación y **deben mantenerse sincronizados a mano** con cada cambio aplicado (ver [Flujo de cambios en la base de datos](#flujo-de-cambios-en-la-base-de-datos)).
 
 ### Diagrama de relaciones
 
@@ -224,6 +253,65 @@ conceptos
 #### `conceptos`
 - Glosario específico de cada libro (término + definición).
 - No tienen listado propio; se muestran en la vista de detalle del libro (`GET /libros/:id`).
+
+---
+
+## Flujo de cambios en la base de datos
+
+La base de datos vive en la VM de GCP y **la aplicación nunca modifica el esquema por su cuenta**. Todo SQL que haya que correr se escribe primero en un archivo dentro de `db/pending/` y espera ahí hasta que se ejecuta a mano en la VM.
+
+### Carpetas
+
+| Carpeta | Contenido |
+|---|---|
+| `db/pending/` | SQL escrito pero **todavía no ejecutado** en la VM |
+| `db/applied/` | SQL que **ya se ejecutó** en la base de datos de la VM |
+
+### Regla
+
+> Si un cambio del sistema toca la base de datos — tabla nueva, columna nueva, índice, `ALTER`, corrección de datos — el `.sql` correspondiente se crea en `db/pending/`. Nada se mueve a `db/applied/` hasta confirmar que la query corrió en la VM sin error.
+
+### Nombre de los archivos
+
+`YYYYMMDD-descripcion-corta.sql`, para que el orden de ejecución sea evidente:
+
+```
+db/pending/20260830-agrega-tabla-resenas.sql
+db/pending/20260901-indices-en-fks.sql
+```
+
+Cada archivo empieza con un comentario que explica qué hace y por qué.
+
+### Ciclo completo
+
+1. **Escribir** el `.sql` en `db/pending/`.
+
+2. **Ejecutar** en la VM, en orden de fecha:
+
+   ```bash
+   psql -U libreria_user -d libreria_db -f db/pending/20260830-agrega-tabla-resenas.sql
+   ```
+
+3. **Mover** el archivo a `db/applied/` en cuanto se confirma que corrió — basta con avisarle a Claude que la query ya se ejecutó:
+
+   ```bash
+   git mv db/pending/20260830-agrega-tabla-resenas.sql db/applied/
+   ```
+
+4. **Actualizar [`schema.sql`](schema.sql)** para que refleje el estado final de las tablas.
+
+5. **Actualizar el [diagrama de relaciones](#diagrama-de-relaciones)** de este README.
+
+6. **Un solo commit** con las tres cosas: el archivo movido, `schema.sql` y el README.
+
+### Los pasos 4 y 5 no son opcionales
+
+`schema.sql` y el diagrama de relaciones son la única documentación del esquema, y nada los valida automáticamente contra la VM. Si se saltan:
+
+- `schema.sql` deja de servir para levantar el proyecto desde cero.
+- El diagrama del README empieza a describir una base de datos que ya no existe.
+
+Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr. Si algo hay que corregir, se escribe un archivo nuevo en `db/pending/`.
 
 ---
 

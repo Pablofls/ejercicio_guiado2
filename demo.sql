@@ -43,7 +43,7 @@ INSERT INTO conceptos (libro_id, termino, definicion) VALUES
 (3, 'Muggle', 'Término para referirse a personas sin habilidades mágicas.'),
 (3, 'Quidditch', 'Deporte mágico que se juega en escobas voladoras.');
 
--- Usuario admin de prueba (contraseña: admin123)
+-- Usuarios de prueba (ambos con la contraseña: password)
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
 ('Administrador', 'admin@libreria.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
 ('Juan Lector', 'juan@ejemplo.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'lector');
