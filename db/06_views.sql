@@ -125,9 +125,23 @@ GROUP BY c.id, c.nombre;
 COMMENT ON VIEW v_inventario_por_categoria IS
     'Titulos, ejemplares y valor de inventario agrupados por categoria.';
 
-GRANT SELECT ON v_libros_detalle, v_catalogo,
-                v_libros_conceptos, v_inventario_por_categoria
-    TO libreria_app;
+-- El GRANT sólo se aplica si el rol de aplicación ya existe. Así este script
+-- se puede ejecutar tanto en una instalación nueva (donde 00_create_database.sql
+-- ya creó libreria_app) como sobre una base que todavía usa el usuario anterior,
+-- sin abortar por un rol inexistente.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'libreria_app') THEN
+        GRANT SELECT ON v_libros_detalle, v_catalogo,
+                        v_libros_conceptos, v_inventario_por_categoria
+            TO libreria_app;
+        RAISE NOTICE 'Permisos de lectura otorgados a libreria_app.';
+    ELSE
+        RAISE NOTICE 'El rol libreria_app no existe todavia: se omite el GRANT. '
+                     'Crealo con db/00_create_database.sql o con el archivo de '
+                     'db/pending/ correspondiente.';
+    END IF;
+END $$;
 
 -- Inventario de vistas creadas y conteo de filas de control.
 SELECT table_name FROM information_schema.views
