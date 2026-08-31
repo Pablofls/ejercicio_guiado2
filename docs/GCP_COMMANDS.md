@@ -166,7 +166,7 @@ sudo systemctl reload postgresql
 Se ejecutan **en este orden**. Cada uno imprime un resultado de control.
 
 ```bash
-cd /opt/libreria
+cd /opt/udem/libreria
 
 # 1. Base de datos y roles. Pide las contraseñas de forma interactiva:
 #    no quedan en el archivo ni en el historial del shell.
@@ -242,13 +242,15 @@ WHERE rolname LIKE 'libreria%';
 
 ## 8. Desplegar la aplicación
 
-```bash
-sudo mkdir -p /opt/libreria
-sudo useradd --system --home-dir /opt/libreria --shell /sbin/nologin libreria
+La ruta de instalación es `/opt/udem/libreria`. Si despliegas en otra, ajústala
+también en los tres archivos de `deploy/`, que la traen escrita.
 
-cd /opt
+```bash
+sudo mkdir -p /opt/udem
+cd /opt/udem
 sudo git clone <URL-DEL-REPOSITORIO> libreria
-cd /opt/libreria
+sudo chown -R "$USER:$USER" /opt/udem/libreria
+cd /opt/udem/libreria
 sudo npm ci --omit=dev
 
 # Copiar las portadas de prueba al directorio de subidas
@@ -263,12 +265,11 @@ sudo nano .env        # completar DB_PASSWORD y SESSION_SECRET
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # Permisos: sólo el usuario de la aplicación puede leer el .env
-sudo chown -R libreria:libreria /opt/libreria
-sudo chmod 600 /opt/libreria/.env
-sudo chmod 750 /opt/libreria/uploads
+sudo chmod 600 /opt/udem/libreria/.env
+sudo chmod 750 /opt/udem/libreria/uploads
 
 # Prueba local antes de publicar
-sudo -u libreria node app.js
+node app.js
 # En otra terminal:  curl -I http://127.0.0.1:3000/library/login
 ```
 
@@ -296,7 +297,7 @@ sudo systemctl reload nginx
 sudo setsebool -P httpd_can_network_connect 1
 
 # Que NGINX pueda leer los archivos subidos
-sudo chcon -R -t httpd_sys_content_t /opt/libreria/uploads /opt/libreria/public
+sudo chcon -R -t httpd_sys_content_t /opt/udem/libreria/uploads /opt/udem/libreria/public
 ```
 
 Para Apache en lugar de NGINX, usar `deploy/apache-library.conf` y `httpd`.
@@ -333,8 +334,8 @@ journalctl -u libreria -f               # seguir los logs en vivo
 journalctl -u libreria --since "1 hour ago" -p err
 
 # Actualizar tras un git push
-cd /opt/libreria
-sudo -u libreria git pull
+cd /opt/udem/libreria
+git pull
 sudo npm ci --omit=dev
 sudo systemctl restart libreria
 
