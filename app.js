@@ -140,6 +140,11 @@ app.use(manejadorErrores);
 const servidor = app.listen(config.puerto, config.host, () => {
     console.log(`Librería escuchando en http://${config.host}:${config.puerto}${config.basePath || ''}`);
     console.log(`Entorno: ${config.entorno} · prefijo público: '${config.basePath || '/'}'`);
+    // Se registra con qué identidad se conectará a PostgreSQL —nunca la
+    // contraseña—. Sin esto, un usuario de base de datos equivocado sólo se
+    // manifiesta como un error de autenticación en la primera consulta, mucho
+    // después del arranque y sin pista de cuál fue el usuario usado.
+    console.log(`Base de datos: ${config.db.user}@${config.db.host}:${config.db.port}/${config.db.database}`);
 });
 
 // Cierre ordenado: deja de aceptar conexiones y cierra el pool de PostgreSQL.

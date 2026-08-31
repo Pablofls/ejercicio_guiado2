@@ -4,7 +4,29 @@
 // arrancar con un valor por defecto inseguro. Un SESSION_SECRET con valor por
 // omisión en el repositorio permitiría a cualquiera firmar cookies de sesión
 // válidas, así que preferimos no arrancar.
-require('dotenv').config({ quiet: true });
+const resultado = require('dotenv').config({ quiet: true });
+
+// dotenv NO sobrescribe una variable que ya exista en el entorno del proceso.
+// Es su comportamiento documentado y tiene sentido —permite fijar un valor al
+// lanzar el proceso— pero produce un fallo desconcertante: la aplicación acaba
+// usando un valor que no está en el .env y que nadie ve.
+//
+// Caso real: un `export DB_USER=...` que quedó vivo en la sesión de shell hizo
+// que la aplicación se conectara con el usuario anterior de PostgreSQL y la
+// contraseña nueva del .env. El error que llegaba era "password authentication
+// failed", que apunta a la contraseña y no a la causa.
+//
+// Este aviso hace visible la discrepancia en el arranque.
+const delArchivo = resultado.parsed || {};
+const tapadas = Object.keys(delArchivo).filter(k => process.env[k] !== delArchivo[k]);
+if (tapadas.length) {
+    console.warn(
+        `[config] AVISO: el entorno del proceso tiene un valor distinto al del .env ` +
+        `para: ${tapadas.join(', ')}.\n` +
+        `          Se usará el del entorno, NO el del .env. Si no es lo que quieres, ` +
+        `ejecuta: unset ${tapadas.join(' ')}`
+    );
+}
 
 const OBLIGATORIAS = ['DB_USER', 'DB_HOST', 'DB_NAME', 'DB_PASSWORD', 'DB_PORT', 'SESSION_SECRET'];
 
