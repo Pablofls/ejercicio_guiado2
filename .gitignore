@@ -1,5 +1,24 @@
+# Dependencias
 node_modules/
-public/uploads/*
-!public/uploads/.gitkeep
-*.log
+
+# Secretos. NUNCA se versionan. Ver docs/SECURITY_REVIEW.md
 .env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Imágenes subidas en tiempo de ejecución. Las portadas de prueba sí se
+# versionan, pero viven en db/seed_uploads/ y se copian a uploads/ al instalar.
+uploads/*
+!uploads/.gitkeep
+
+# Logs y temporales
+*.log
+npm-debug.log*
+.DS_Store
+*.swp
+
+# Respaldos de base de datos
+*.sql.gz
+*.dump

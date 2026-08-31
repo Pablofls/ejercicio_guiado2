@@ -1,0 +1,50 @@
+# =============================================================================
+# deploy/libreria.service
+# Unidad de systemd: mantiene la aplicación corriendo y la levanta sola tras un
+# reinicio de la VM. Sin esto, `node app.js` muere al cerrar la sesión SSH.
+#
+#     sudo cp deploy/libreria.service /etc/systemd/system/
+#     sudo systemctl daemon-reload
+#     sudo systemctl enable --now libreria
+#     sudo systemctl status libreria
+#     journalctl -u libreria -f          # ver los logs en vivo
+# =============================================================================
+
+[Unit]
+Description=Libreria Online (Node.js + Express + PostgreSQL)
+Documentation=file:/opt/libreria/README.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=libreria
+Group=libreria
+WorkingDirectory=/opt/libreria
+ExecStart=/usr/bin/node app.js
+Restart=on-failure
+RestartSec=5
+
+# El .env lo lee dotenv desde el WorkingDirectory. Debe pertenecer al usuario
+# libreria y tener permisos 600: es el único lugar con credenciales reales.
+Environment=NODE_ENV=production
+
+# --- Endurecimiento del servicio ---------------------------------------------
+# El proceso corre como usuario sin privilegios y con el sistema de archivos
+# en sólo lectura salvo uploads/. Si alguien lograra ejecutar código dentro de
+# la aplicación, no podría escribir en /etc ni en el resto del disco.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ReadWritePaths=/opt/libreria/uploads
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=libreria
+
+[Install]
+WantedBy=multi-user.target

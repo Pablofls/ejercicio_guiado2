@@ -1,0 +1,83 @@
+Ejecución de tests/pruebas.sh · 2026-08-31
+BASE_PATH=/library (como en la VM, tras el reverse proxy).
+Las credenciales se pasaron por variable de entorno; no aparecen aquí.
+
+== Librería · matriz de pruebas ==
+   destino: http://127.0.0.1:3999/library
+
+-- Autenticación y sesión (RF-01, RF-02) --
+  PR-01    Visitante en /libros es redirigido a login           OK  (302)
+  PR-02    GET /login responde                                  OK  (200)
+  PR-03    GET /registro responde                               OK  (200)
+  PR-04    Ruta inexistente da 404, no 500                      OK  (404)
+  PR-05    POST /login sin token CSRF es rechazado              OK  (403)
+  PR-06    Contraseña incorrecta devuelve 401                  OK  (401)
+  PR-07    Correo inexistente devuelve 401 (mismo mensaje)      OK  (401)
+  PR-08    Login del Administrador (302)                        OK  (302)
+
+-- Autorización por rol (RF-11, RNF-01) --
+  PR-09    Admin accede a /panel                                OK  (200)
+  PR-09    Admin accede a /usuarios                             OK  (200)
+  PR-09    Admin accede a /autores                              OK  (200)
+  PR-09    Admin accede a /generos                              OK  (200)
+  PR-09    Admin accede a /categorias                           OK  (200)
+  PR-09    Admin accede a /formatos                             OK  (200)
+  PR-09    Admin accede a /conceptos                            OK  (200)
+  PR-09    Admin accede a /libros/nuevo                         OK  (200)
+  PR-10    Login del lector (302)                               OK  (302)
+  PR-11    Lector ve el catálogo                               OK  (200)
+  PR-12    Lector ve el detalle de un libro                     OK  (200)
+  PR-13    Lector recibe 403 en /usuarios                       OK  (403)
+  PR-13    Lector recibe 403 en /panel                          OK  (403)
+  PR-13    Lector recibe 403 en /libros/nuevo                   OK  (403)
+  PR-13    Lector recibe 403 en /autores                        OK  (403)
+  PR-13    Lector recibe 403 en /generos                        OK  (403)
+  PR-14    Lector no puede borrar por POST directo              OK  (403)
+
+-- Búsqueda y parametrización (RF-05, RNF-02) --
+  PR-15    Búsqueda por ISBN exacto encuentra el libro         OK  (si)
+  PR-16    Un <script> en la búsqueda se muestra escapado      OK  (si)
+  PR-17    …y no aparece como script ejecutable               OK  (no)
+  PR-18    Carga de inyección SQL no rompe la consulta         OK  (200)
+  PR-19    El catálogo sigue respondiendo después             OK  (200)
+
+-- Validación server-side del CRUD de libros (RF-06, RNF-03) --
+  PR-20    Alta válida con dos autores y un género            OK  (302)
+  PR-21    ISBN duplicado es rechazado                          OK  (400)
+  PR-22    Libro sin autor es rechazado                         OK  (400)
+  PR-23    Precio negativo es rechazado                         OK  (400)
+  PR-24    Stock negativo es rechazado                          OK  (400)
+  PR-25    ISBN con formato inválido es rechazado              OK  (400)
+  PR-26    Año fuera de rango es rechazado                     OK  (400)
+  PR-27    Categoría inexistente es rechazada por la FK        OK  (400)
+
+-- Administrador único (RF-11) --
+  PR-28    Crear un segundo Administrador es rechazado          OK  (409)
+  PR-29    …con un mensaje explicativo                        OK  (si)
+  PR-30    Contraseña débil es rechazada                      OK  (400)
+  PR-31    Correo mal formado es rechazado                      OK  (400)
+
+-- Cabeceras y sesión (RNF-01) --
+  PR-32    Cabecera X-Content-Type-Options: nosniff             OK  (si)
+  PR-33    Cabecera X-Frame-Options: DENY                       OK  (si)
+  PR-34    Content-Security-Policy presente                     OK  (si)
+  PR-35    No se anuncia X-Powered-By                           OK  (no)
+  PR-36    Cookie de sesión HttpOnly                           OK  (si)
+  PR-37    Cookie de sesión SameSite=Lax                       OK  (si)
+
+-- Subida de imágenes (RF-09, RNF-01) --
+  PR-40    PHP renombrado a .png: rechazado por la firma        OK  (400)
+  PR-41    Ejecutable .sh con MIME falseado: rechazado          OK  (400)
+  PR-42    PDF: tipo no permitido                               OK  (400)
+  PR-43    Archivo de 3 MB: supera el límite de 2 MB           OK  (400)
+  PR-44    Sin texto alternativo: rechazado                     OK  (400)
+  PR-45    Subida sin token CSRF: rechazada                     OK  (403)
+  PR-46    PNG válido con texto alternativo: aceptado          OK  (302)
+
+-- Cierre de sesión (RF-03) --
+  PR-38    GET /logout redirige                                 OK  (302)
+  PR-39    Tras cerrar sesión, /usuarios ya no es accesible    OK  (302)
+
+======================================================================
+Pruebas ejecutadas: 57 · 57 pasadas · 0 fallidas
+======================================================================

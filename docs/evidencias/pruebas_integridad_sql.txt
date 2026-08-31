@@ -1,0 +1,27 @@
+Pruebas negativas de integridad — db/03_all_quieries_before_stored_procedures.sql
+Fecha: 2026-08-30
+Cada sentencia DEBE fallar; se conserva el error real que devuelve PostgreSQL.
+
+psql:db/03_all_quieries_before_stored_procedures.sql:164: NOTICE:  OK C19 -> duplicate key value violates unique constraint "uq_libros_isbn"  (23505)
+psql:db/03_all_quieries_before_stored_procedures.sql:172: NOTICE:  OK C20 -> new row for relation "libros" violates check constraint "ck_libros_stock"  (23514)
+psql:db/03_all_quieries_before_stored_procedures.sql:180: NOTICE:  OK C21 -> new row for relation "libros" violates check constraint "ck_libros_precio"  (23514)
+psql:db/03_all_quieries_before_stored_procedures.sql:188: NOTICE:  OK C22 -> insert or update on table "libros_autores" violates foreign key constraint "fk_la_autor"  (23503)
+psql:db/03_all_quieries_before_stored_procedures.sql:196: NOTICE:  OK C23 -> update or delete on table "categorias" violates foreign key constraint "fk_libros_categoria" on table "libros"  (23503)
+psql:db/03_all_quieries_before_stored_procedures.sql:206: NOTICE:  OK C24 -> duplicate key value violates unique constraint "ux_usuarios_admin_unico"  (23505)
+psql:db/03_all_quieries_before_stored_procedures.sql:215: NOTICE:  OK C25 -> new row for relation "usuarios" violates check constraint "ck_usuarios_hash_bcrypt"  (23514)
+
+Conteos tras ejecutar db/01 y db/02:
+autores  30
+categorias  30
+conceptos  30
+formatos  30
+generos  30
+imagenes_libros  33
+libros  33
+usuarios  30
+
+Objetos de base de datos creados:
+  procedimientos y funciones propias: 11
+  disparadores: 6
+  vistas: 4
+  administradores (debe ser 1): 1

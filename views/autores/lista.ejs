@@ -1,0 +1,36 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <div class="panel__encabezado">
+      <h1><%= titulo %></h1>
+      <a class="boton" href="<%= base %>/autores/nuevo">+ Nuevo autor</a>
+    </div>
+    <% if (registros.length) { %>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Nombre</th><th>Nacionalidad</th><th class="num">Libros</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <% registros.forEach(function (a) { %>
+        <tr>
+          <td><a href="<%= base %>/autores/<%= a.id %>"><strong><%= a.nombre %></strong></a></td>
+          <td><%= a.nacionalidad || '' %></td>
+          <td class="num"><%= a.libros %></td>
+          <td class="acciones-celda">
+            <a href="<%= base %>/autores/<%= a.id %>/editar">Editar</a>
+            <% if (a.libros > 0) { %>
+              <span class="ayuda-linea" title="Acreditado en libros; la FK impide borrarlo">En uso</span>
+            <% } else { %>
+              <%- include('../parciales/confirmar', {
+                    accion: base + '/autores/' + a.id + '/eliminar',
+                    mensaje: '¿Eliminar a ' + a.nombre + '?', etiqueta: 'Eliminar' }) %>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } else { %><div class="vacio"><p>Todavía no hay autores.</p></div><% } %>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,23 @@
+<%# Barra superior. Los enlaces de gestión sólo se dibujan para el
+    Administrador; esto es comodidad visual: la protección real la aplica
+    requireAdmin en cada *.routes.js. %>
+<header class="barra">
+  <a class="barra__marca" href="<%= base %>/libros">Librería</a>
+  <nav class="barra__nav">
+    <a href="<%= base %>/libros" <%= rutaActual.startsWith('/libros') ? 'class="activo"' : '' %>>Catálogo</a>
+    <% if (esAdmin) { %>
+      <a href="<%= base %>/panel">Panel</a>
+      <a href="<%= base %>/autores">Autores</a>
+      <a href="<%= base %>/generos">Géneros</a>
+      <a href="<%= base %>/categorias">Categorías</a>
+      <a href="<%= base %>/formatos">Formatos</a>
+      <a href="<%= base %>/conceptos">Conceptos</a>
+      <a href="<%= base %>/usuarios">Usuarios</a>
+    <% } %>
+  </nav>
+  <div class="barra__usuario">
+    <span class="barra__nombre"><%= usuario.nombre %></span>
+    <span class="etiqueta etiqueta--<%= esAdmin ? 'admin' : 'lector' %>"><%= usuario.rol %></span>
+    <a class="boton boton--sutil" href="<%= base %>/logout">Salir</a>
+  </div>
+</header>

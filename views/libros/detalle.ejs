@@ -1,0 +1,144 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <div class="detalle">
+      <div>
+        <% if (libro.portada) { %>
+          <img class="libro__portada" src="<%= base %>/uploads/<%= libro.portada %>"
+               alt="<%= libro.portada_alt || ('Portada de ' + libro.titulo) %>">
+        <% } else { %>
+          <div class="libro__portada-vacia"><%= libro.titulo %></div>
+        <% } %>
+      </div>
+      <div class="detalle__datos">
+        <h1><%= libro.titulo %></h1>
+        <dl class="fichas">
+          <dt>Autores</dt>
+          <dd>
+            <% if (autores.length) { %>
+              <% autores.forEach(function (a, i) { %><a href="<%= base %>/autores/<%= a.id %>"><%= a.nombre %></a><%= i < autores.length - 1 ? ' · ' : '' %><% }); %>
+            <% } else { %>Sin autores<% } %>
+          </dd>
+          <dt>Géneros</dt>
+          <dd><%= generos.length ? generos.map(function (g) { return g.nombre; }).join(' · ') : 'Sin géneros' %></dd>
+          <dt>Categoría</dt><dd><%= libro.categoria %></dd>
+          <dt>Formato</dt><dd><%= libro.formato %></dd>
+          <dt>ISBN</dt><dd class="mono"><%= libro.isbn %></dd>
+          <dt>Año</dt><dd><%= libro.anio_publicacion || 'No registrado' %></dd>
+          <dt>Precio</dt><dd class="precio">$<%= Number(libro.precio).toFixed(2) %></dd>
+          <dt>Disponibilidad</dt>
+          <dd>
+            <% if (libro.stock > 0) { %>
+              <span class="existencias existencias--si">Disponible</span>
+            <% } else { %>
+              <span class="existencias existencias--no">Sin existencias</span>
+            <% } %>
+            <% if (esAdmin) { %> (<%= libro.stock %> ejemplares)<% } %>
+          </dd>
+        </dl>
+        <p class="sinopsis"><%= libro.sinopsis || 'Sin sinopsis registrada.' %></p>
+
+        <% if (esAdmin) { %>
+        <form method="POST" action="<%= base %>/libros/<%= libro.id %>/stock" class="ajuste-stock">
+          <%- include('../parciales/csrf') %>
+          <label for="delta">Ajustar existencias</label>
+          <input type="number" id="delta" name="delta" value="1" step="1" required>
+          <button type="submit" class="boton boton--menudo">Aplicar</button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+
+    <section class="seccion">
+      <div class="panel__encabezado">
+        <h2>Imágenes <span class="conteo"><%= imagenes.length %></span></h2>
+        <% if (esAdmin) { %>
+          <a class="boton boton--sutil boton--menudo" href="<%= base %>/imagenes/nuevo/<%= libro.id %>">+ Agregar imagen</a>
+        <% } %>
+      </div>
+      <% if (imagenes.length) { %>
+      <div class="galeria">
+        <% imagenes.forEach(function (i) { %>
+        <figure class="galeria__item <%= i.es_portada ? 'es-portada' : '' %>">
+          <img src="<%= base %>/uploads/<%= i.nombre_archivo %>" alt="<%= i.texto_alternativo || libro.titulo %>" loading="lazy">
+          <figcaption>
+            <%= i.texto_alternativo || 'Sin texto alternativo' %>
+            <% if (i.es_portada) { %><span class="etiqueta etiqueta--admin">Portada</span><% } %>
+          </figcaption>
+          <% if (esAdmin) { %>
+          <div class="galeria__acciones">
+            <% if (!i.es_portada) { %>
+            <form method="POST" action="<%= base %>/imagenes/<%= i.id %>/portada" class="en-linea">
+              <%- include('../parciales/csrf') %>
+              <button type="submit" class="boton boton--sutil boton--menudo">Usar como portada</button>
+            </form>
+            <% } %>
+            <%- include('../parciales/confirmar', {
+                  accion: base + '/imagenes/' + i.id + '/eliminar',
+                  mensaje: '¿Eliminar esta imagen? El archivo se borra del servidor.',
+                  etiqueta: 'Eliminar' }) %>
+          </div>
+          <p class="meta"><%= i.tipo_mime %> · <%= Math.round(i.tamano_bytes / 1024) %> KB</p>
+          <% } %>
+        </figure>
+        <% }); %>
+      </div>
+      <% } else { %>
+        <p class="vacio-linea">Este libro no tiene imágenes.</p>
+      <% } %>
+    </section>
+
+    <section class="seccion">
+      <div class="panel__encabezado">
+        <h2>Conceptos <span class="conteo"><%= conceptos.length %></span></h2>
+        <% if (esAdmin) { %>
+          <a class="boton boton--sutil boton--menudo" href="<%= base %>/conceptos/libro/<%= libro.id %>/nuevo">+ Agregar concepto</a>
+        <% } %>
+      </div>
+      <p class="ayuda">
+        La definición pertenece a la relación libro–concepto: el mismo término
+        puede definirse distinto en otro libro.
+      </p>
+      <% if (conceptos.length) { %>
+      <div class="tabla-desplazable">
+      <table>
+        <thead><tr><th>Término</th><th>Definición</th><th>Ubicación</th><% if (esAdmin) { %><th>Acciones</th><% } %></tr></thead>
+        <tbody>
+          <% conceptos.forEach(function (c) { %>
+          <tr>
+            <td><a href="<%= base %>/conceptos/<%= c.concepto_id %>"><strong><%= c.termino %></strong></a></td>
+            <td><%= c.definicion %></td>
+            <td class="mono"><%= c.capitulo || '' %><%= c.pagina ? ', p. ' + c.pagina : '' %></td>
+            <% if (esAdmin) { %>
+            <td class="acciones-celda">
+              <a href="<%= base %>/conceptos/libro/<%= libro.id %>/nuevo?concepto_id=<%= c.concepto_id %>">Editar</a>
+              <%- include('../parciales/confirmar', {
+                    accion: base + '/conceptos/libro/' + libro.id + '/' + c.concepto_id + '/quitar',
+                    mensaje: '¿Retirar «' + c.termino + '» de este libro? El término sigue en el catálogo.',
+                    etiqueta: 'Quitar' }) %>
+            </td>
+            <% } %>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      </div>
+      <% } else { %>
+        <p class="vacio-linea">Este libro no tiene conceptos registrados.</p>
+      <% } %>
+    </section>
+
+    <% if (esAdmin) { %>
+    <div class="acciones">
+      <a class="boton" href="<%= base %>/libros/<%= libro.id %>/editar">Editar libro</a>
+      <%- include('../parciales/confirmar', {
+            accion: base + '/libros/' + libro.id + '/eliminar',
+            mensaje: '¿Eliminar «' + libro.titulo + '»? Se borrarán sus imágenes y conceptos.',
+            etiqueta: 'Eliminar libro' }) %>
+    </div>
+    <% } %>
+
+    <p><a href="<%= base %>/libros">← Volver al catálogo</a></p>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,103 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <h1><%= titulo %></h1>
+    <%- include('../parciales/errores') %>
+
+    <%# novalidate: la validación del navegador ayuda, pero la que decide es la
+        del servidor (services/validacion.js). Se desactiva la nativa para que
+        durante las pruebas se vea actuar a la server-side. %>
+    <form method="POST" action="<%= accion %>" novalidate>
+      <%- include('../parciales/csrf') %>
+
+      <div class="rejilla-campos">
+        <div class="campo">
+          <label for="isbn">ISBN <span class="req">*</span></label>
+          <input type="text" id="isbn" name="isbn" maxlength="17" required
+                 value="<%= libro ? libro.isbn : '' %>" placeholder="978-607-32-1234-5">
+          <p class="ayuda">10 o 13 dígitos, con o sin guiones. Debe ser único.</p>
+        </div>
+
+        <div class="campo">
+          <label for="anio">Año de publicación</label>
+          <input type="number" id="anio" name="anio_publicacion" min="1450" max="2100"
+                 value="<%= libro && libro.anio_publicacion ? libro.anio_publicacion : '' %>">
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="titulo">Título <span class="req">*</span></label>
+        <input type="text" id="titulo" name="titulo" maxlength="200" required
+               value="<%= libro ? libro.titulo : '' %>">
+      </div>
+
+      <div class="rejilla-campos">
+        <div class="campo">
+          <label for="precio">Precio <span class="req">*</span></label>
+          <input type="number" id="precio" name="precio" step="0.01" min="0" required
+                 value="<%= libro && libro.precio !== undefined ? libro.precio : '0.00' %>">
+        </div>
+        <div class="campo">
+          <label for="stock">Existencias <span class="req">*</span></label>
+          <input type="number" id="stock" name="stock" min="0" step="1" required
+                 value="<%= libro && libro.stock !== undefined ? libro.stock : 0 %>">
+        </div>
+      </div>
+
+      <div class="rejilla-campos">
+        <div class="campo">
+          <label for="categoria_id">Categoría <span class="req">*</span></label>
+          <select id="categoria_id" name="categoria_id" required>
+            <option value="">— Elige una —</option>
+            <% categorias.forEach(function (c) { %>
+              <option value="<%= c.id %>" <%= libro && String(libro.categoria_id) === String(c.id) ? 'selected' : '' %>><%= c.nombre %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="formato_id">Formato <span class="req">*</span></label>
+          <select id="formato_id" name="formato_id" required>
+            <option value="">— Elige uno —</option>
+            <% formatos.forEach(function (f) { %>
+              <option value="<%= f.id %>" <%= libro && String(libro.formato_id) === String(f.id) ? 'selected' : '' %>><%= f.nombre %></option>
+            <% }); %>
+          </select>
+        </div>
+      </div>
+
+      <%# Autores y géneros son relaciones N:M: se eligen varios. El orden de
+          selección determina el `orden` en libros_autores (posición en portada). %>
+      <div class="rejilla-campos">
+        <div class="campo">
+          <label for="autores">Autores <span class="req">*</span></label>
+          <select id="autores" name="autores" multiple size="9" required>
+            <% autores.forEach(function (a) { %>
+              <option value="<%= a.id %>" <%= seleccion.autores.map(String).includes(String(a.id)) ? 'selected' : '' %>><%= a.nombre %></option>
+            <% }); %>
+          </select>
+          <p class="ayuda">Ctrl / ⌘ para elegir varios. Al menos uno.</p>
+        </div>
+        <div class="campo">
+          <label for="generos">Géneros</label>
+          <select id="generos" name="generos" multiple size="9">
+            <% generos.forEach(function (g) { %>
+              <option value="<%= g.id %>" <%= seleccion.generos.map(String).includes(String(g.id)) ? 'selected' : '' %>><%= g.nombre %></option>
+            <% }); %>
+          </select>
+          <p class="ayuda">Un libro puede pertenecer a varios géneros.</p>
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="sinopsis">Sinopsis</label>
+        <textarea id="sinopsis" name="sinopsis" rows="4" maxlength="5000"><%= libro ? (libro.sinopsis || '') : '' %></textarea>
+      </div>
+
+      <div class="acciones">
+        <button type="submit" class="boton">Guardar</button>
+        <a class="boton boton--sutil" href="<%= libro && libro.id ? base + '/libros/' + libro.id : base + '/libros' %>">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,26 @@
+<% var ruta = rutaActual.split('/')[1]; -%>
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel panel--angosto">
+    <h1><%= titulo %></h1>
+    <%- include('../parciales/errores') %>
+    <form method="POST" action="<%= accion %>" novalidate>
+      <%- include('../parciales/csrf') %>
+      <div class="campo">
+        <label for="nombre">Nombre <span class="req">*</span></label>
+        <input type="text" id="nombre" name="nombre" maxlength="80" required autofocus
+               value="<%= registro ? registro.nombre : '' %>">
+        <p class="ayuda">Debe ser único.</p>
+      </div>
+      <div class="campo">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" name="descripcion" rows="3"><%= registro ? (registro.descripcion || '') : '' %></textarea>
+      </div>
+      <div class="acciones">
+        <button type="submit" class="boton">Guardar</button>
+        <a class="boton boton--sutil" href="<%= base %>/<%= ruta %>">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

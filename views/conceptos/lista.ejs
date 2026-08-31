@@ -1,0 +1,40 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <div class="panel__encabezado">
+      <h1><%= titulo %></h1>
+      <a class="boton" href="<%= base %>/conceptos/nuevo">+ Nuevo término</a>
+    </div>
+    <p class="ayuda">
+      Este es el catálogo de <strong>términos</strong>. La definición no vive
+      aquí: se captura en cada libro, porque el mismo término puede definirse
+      distinto en libros distintos.
+    </p>
+    <% if (registros.length) { %>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Término</th><th class="num">Libros que lo definen</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <% registros.forEach(function (c) { %>
+        <tr>
+          <td><a href="<%= base %>/conceptos/<%= c.id %>"><strong><%= c.termino %></strong></a></td>
+          <td class="num"><%= c.libros %></td>
+          <td class="acciones-celda">
+            <a href="<%= base %>/conceptos/<%= c.id %>/editar">Editar</a>
+            <% if (c.libros > 0) { %>
+              <span class="ayuda-linea" title="Definido en libros; la FK impide borrarlo">En uso</span>
+            <% } else { %>
+              <%- include('../parciales/confirmar', {
+                    accion: base + '/conceptos/' + c.id + '/eliminar',
+                    mensaje: '¿Eliminar el término «' + c.termino + '»?', etiqueta: 'Eliminar' }) %>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } else { %><div class="vacio"><p>Todavía no hay términos.</p></div><% } %>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,32 @@
+<%# Evidencia visual de la decisión de modelado: un término, varias
+    definiciones, una por libro. %>
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <h1><%= concepto.termino %></h1>
+    <p class="ayuda">
+      Cada renglón es una definición distinta del mismo término. Por eso la
+      definición vive en <code>libros_conceptos</code> y no en <code>conceptos</code>.
+    </p>
+    <% if (definiciones.length) { %>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Libro</th><th>Definición</th><th>Ubicación</th></tr></thead>
+      <tbody>
+        <% definiciones.forEach(function (d) { %>
+        <tr>
+          <td><a href="<%= base %>/libros/<%= d.libro_id %>"><%= d.libro %></a></td>
+          <td><%= d.definicion %></td>
+          <td class="mono"><%= d.capitulo || '' %><%= d.pagina ? ', p. ' + d.pagina : '' %></td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } else { %>
+      <p class="vacio-linea">Ningún libro define todavía este término.</p>
+    <% } %>
+    <p><a href="<%= base %>/conceptos">← Volver a conceptos</a></p>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

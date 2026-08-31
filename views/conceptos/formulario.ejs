@@ -1,0 +1,21 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel panel--angosto">
+    <h1><%= titulo %></h1>
+    <%- include('../parciales/errores') %>
+    <form method="POST" action="<%= accion %>" novalidate>
+      <%- include('../parciales/csrf') %>
+      <div class="campo">
+        <label for="nombre">Término <span class="req">*</span></label>
+        <input type="text" id="nombre" name="nombre" maxlength="80" required autofocus
+               value="<%= registro ? (registro.termino || registro.nombre || '') : '' %>">
+        <p class="ayuda">Debe ser único en el catálogo. Ej.: IaaS, Bucket, Serverless.</p>
+      </div>
+      <div class="acciones">
+        <button type="submit" class="boton">Guardar</button>
+        <a class="boton boton--sutil" href="<%= base %>/conceptos">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,3 @@
+<%# Token anti-CSRF. Va en TODOS los formularios POST; verificarCsrf rechaza
+    con 403 cualquier POST que llegue sin él. %>
+<input type="hidden" name="_csrf" value="<%= csrf %>">

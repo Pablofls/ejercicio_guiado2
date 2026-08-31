@@ -1,34 +1,25 @@
 const AutoresModel = require('./autores.model');
-const AutoresViews = require('./autores.views');
+const { crearControlador } = require('../../../services/crudCatalogo');
+const { validarAutor } = require('../../../services/validacion');
+const { entero } = require('../../../services/validacion');
 
-async function getLista(req, res) {
-    const autores = await AutoresModel.getAll();
-    res.send(AutoresViews.listaView(autores, req.session.usuario));
+const base = crearControlador({
+    modelo: AutoresModel, ruta: 'autores',
+    plural: 'Autores', singular: 'autor', validar: validarAutor
+});
+
+// Los autores tienen además una ficha propia con sus libros: es la única
+// diferencia de comportamiento respecto a los demás catálogos.
+async function getDetalle(req, res, next) {
+    const id = entero(req.params.id);
+    if (!id) return next();
+
+    const autor = await AutoresModel.getById(id);
+    if (!autor) return next();
+
+    res.render('autores/detalle', {
+        titulo: autor.nombre, autor, libros: await AutoresModel.getLibros(id)
+    });
 }
 
-function getNuevo(req, res) {
-    res.send(AutoresViews.formularioView('Nuevo autor', '/autores', null, req.session.usuario));
-}
-
-async function postCrear(req, res) {
-    await AutoresModel.create(req.body);
-    res.redirect('/autores');
-}
-
-async function getEditar(req, res) {
-    const autor = await AutoresModel.getById(req.params.id);
-    if (!autor) return res.send('Autor no encontrado. <a href="/autores">Volver</a>');
-    res.send(AutoresViews.formularioView('Editar autor', `/autores/${autor.id}/editar`, autor, req.session.usuario));
-}
-
-async function postActualizar(req, res) {
-    await AutoresModel.update(req.params.id, req.body);
-    res.redirect('/autores');
-}
-
-async function postEliminar(req, res) {
-    await AutoresModel.remove(req.params.id);
-    res.redirect('/autores');
-}
-
-module.exports = { getLista, getNuevo, postCrear, getEditar, postActualizar, postEliminar };
+module.exports = { ...base, getDetalle };

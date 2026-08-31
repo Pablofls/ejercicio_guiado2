@@ -1,0 +1,70 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <h1>Panel de administración</h1>
+
+  <div class="tarjetas">
+    <% [['Libros', resumen.libros], ['Ejemplares', resumen.ejemplares],
+        ['Autores', resumen.autores], ['Géneros', resumen.generos],
+        ['Categorías', resumen.categorias], ['Formatos', resumen.formatos],
+        ['Conceptos', resumen.conceptos], ['Imágenes', resumen.imagenes],
+        ['Usuarios', resumen.usuarios]].forEach(function (t) { %>
+      <div class="tarjeta"><span class="tarjeta__cifra"><%= t[1] %></span><span class="tarjeta__rotulo"><%= t[0] %></span></div>
+    <% }); %>
+    <div class="tarjeta <%= resumen.administradores === 1 ? 'tarjeta--ok' : 'tarjeta--alerta' %>">
+      <span class="tarjeta__cifra"><%= resumen.administradores %></span>
+      <span class="tarjeta__rotulo">Administrador<%= resumen.administradores === 1 ? '' : 'es' %></span>
+    </div>
+    <div class="tarjeta <%= resumen.sin_existencias > 0 ? 'tarjeta--alerta' : '' %>">
+      <span class="tarjeta__cifra"><%= resumen.sin_existencias %></span>
+      <span class="tarjeta__rotulo">Sin existencias</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Inventario por categoría</h2>
+    <p class="ayuda">Consulta a la vista <code>v_inventario_por_categoria</code>.</p>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Categoría</th><th class="num">Títulos</th><th class="num">Ejemplares</th>
+                 <th class="num">Precio promedio</th><th class="num">Valor</th></tr></thead>
+      <tbody>
+        <% inventario.forEach(function (i) { %>
+        <tr>
+          <td><%= i.categoria %></td>
+          <td class="num"><%= i.titulos %></td>
+          <td class="num"><%= i.ejemplares %></td>
+          <td class="num">$<%= Number(i.precio_promedio).toFixed(2) %></td>
+          <td class="num">$<%= Number(i.valor_inventario).toFixed(2) %></td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Libros con datos incompletos</h2>
+    <% if (pendientes.length) { %>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Libro</th><th>Falta</th></tr></thead>
+      <tbody>
+        <% pendientes.forEach(function (p) { %>
+        <tr>
+          <td><a href="<%= base %>/libros/<%= p.id %>"><%= p.titulo %></a></td>
+          <td>
+            <% var faltantes = []; if (p.sin_imagen) faltantes.push('imagen');
+               if (p.sin_genero) faltantes.push('género'); if (p.sin_conceptos) faltantes.push('conceptos'); %>
+            <%= faltantes.join(', ') %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } else { %>
+      <p class="vacio-linea">Todos los libros tienen imagen, género y conceptos.</p>
+    <% } %>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

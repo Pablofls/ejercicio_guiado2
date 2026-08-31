@@ -1,20 +1,33 @@
 {
   "name": "libreria",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Aplicacion web monolitica para la gestion de una libreria en linea (Node.js + Express + EJS + PostgreSQL). Ejercicio guiado 02, Integracion de Aplicaciones Computacionales, UDEM.",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "dev": "node app.js"
   },
-  "keywords": [],
+  "keywords": [
+    "libreria",
+    "express",
+    "ejs",
+    "postgresql",
+    "monolito",
+    "udem"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "multer": "^2.2.0",
     "pg": "^8.23.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
   }
 }

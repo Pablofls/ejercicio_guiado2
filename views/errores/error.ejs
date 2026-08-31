@@ -1,0 +1,11 @@
+<%# Mensaje genérico. El detalle técnico queda en el log del servidor: mostrar
+    un stack trace o el SQL le diría a un atacante cómo está hecho el sistema. %>
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="vacio">
+    <h1><%= titulo %></h1>
+    <p><%= mensaje %></p>
+    <p><a href="<%= typeof base !== 'undefined' ? base : '' %>/libros">← Volver al catálogo</a></p>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

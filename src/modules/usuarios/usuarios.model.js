@@ -1,46 +1,51 @@
-const db = require('../../../db');
+// SQL de usuarios. password_hash nunca sale de aquí hacia una vista.
+const db = require('../../../config/db');
 const bcrypt = require('bcrypt');
+const { RONDAS } = require('../auth/auth.model');
 
 async function getAll() {
-    const result = await db.query(
-        'SELECT id, nombre, email, rol, creado_en FROM usuarios ORDER BY nombre'
-    );
-    return result.rows;
+    const { rows } = await db.query(
+        `SELECT id, nombre, email, rol, activo, creado_en
+         FROM usuarios ORDER BY rol, nombre`);
+    return rows;
 }
 
 async function getById(id) {
-    const result = await db.query(
-        'SELECT id, nombre, email, rol FROM usuarios WHERE id = $1',
-        [id]
-    );
-    return result.rows[0] || null;
+    const { rows } = await db.query(
+        'SELECT id, nombre, email, rol, activo FROM usuarios WHERE id = $1', [id]);
+    return rows[0] || null;
 }
 
-async function create({ nombre, email, password, rol }) {
-    const hash = await bcrypt.hash(password, 10);
-    await db.query(
-        'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES ($1,$2,$3,$4)',
-        [nombre, email, hash, rol || 'lector']
-    );
+async function contarAdmins() {
+    const { rows } = await db.query("SELECT count(*)::int AS n FROM usuarios WHERE rol = 'admin'");
+    return rows[0].n;
 }
 
-async function update(id, { nombre, email, password, rol }) {
-    if (password && password.trim() !== '') {
-        const hash = await bcrypt.hash(password, 10);
-        await db.query(
-            'UPDATE usuarios SET nombre=$1, email=$2, password_hash=$3, rol=$4 WHERE id=$5',
-            [nombre, email, hash, rol, id]
-        );
-    } else {
-        await db.query(
-            'UPDATE usuarios SET nombre=$1, email=$2, rol=$3 WHERE id=$4',
-            [nombre, email, rol, id]
-        );
-    }
+async function create({ nombre, email, password, rol, activo }) {
+    const hash = await bcrypt.hash(password, RONDAS);
+    const { rows } = await db.query(
+        `INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
+         VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+        [nombre, email, hash, rol, activo]);
+    return rows[0].id;
+}
+
+// Contraseña vacía en edición = "no cambiar". Se resuelve con COALESCE en una
+// sola sentencia en vez de dos UPDATE distintos.
+async function update(id, { nombre, email, password, rol, activo }) {
+    const hash = password ? await bcrypt.hash(password, RONDAS) : null;
+    const { rowCount } = await db.query(
+        `UPDATE usuarios
+         SET nombre = $1, email = $2, rol = $3, activo = $4,
+             password_hash = COALESCE($5, password_hash)
+         WHERE id = $6`,
+        [nombre, email, rol, activo, hash, id]);
+    return rowCount;
 }
 
 async function remove(id) {
-    await db.query('DELETE FROM usuarios WHERE id=$1', [id]);
+    const { rowCount } = await db.query('DELETE FROM usuarios WHERE id=$1', [id]);
+    return rowCount;
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, contarAdmins, create, update, remove };

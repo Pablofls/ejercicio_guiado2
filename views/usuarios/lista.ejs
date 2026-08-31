@@ -1,0 +1,39 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <div class="panel__encabezado">
+      <h1><%= titulo %></h1>
+      <a class="boton" href="<%= base %>/usuarios/nuevo">+ Nuevo usuario</a>
+    </div>
+    <p class="ayuda">
+      Administradores registrados: <strong><%= administradores %></strong>.
+      La base de datos admite como máximo uno (índice único parcial
+      <code>ux_usuarios_admin_unico</code> + trigger <code>trg_un_solo_admin</code>).
+    </p>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Alta</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <% usuarios.forEach(function (u) { %>
+        <tr>
+          <td><%= u.nombre %><% if (u.id === usuario.id) { %> <span class="ayuda-linea">(tú)</span><% } %></td>
+          <td class="mono"><%= u.email %></td>
+          <td><span class="etiqueta etiqueta--<%= u.rol === 'admin' ? 'admin' : 'lector' %>"><%= u.rol %></span></td>
+          <td><%= u.activo ? 'Activo' : 'Desactivado' %></td>
+          <td><%= new Date(u.creado_en).toLocaleDateString('es-MX') %></td>
+          <td class="acciones-celda">
+            <a href="<%= base %>/usuarios/<%= u.id %>/editar">Editar</a>
+            <% if (u.id !== usuario.id) { %>
+              <%- include('../parciales/confirmar', {
+                    accion: base + '/usuarios/' + u.id + '/eliminar',
+                    mensaje: '¿Eliminar la cuenta de ' + u.nombre + '?', etiqueta: 'Eliminar' }) %>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

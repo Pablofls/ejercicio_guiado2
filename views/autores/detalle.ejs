@@ -1,0 +1,22 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel panel--angosto">
+    <h1><%= autor.nombre %></h1>
+    <p class="libro__categoria"><%= autor.nacionalidad || 'Nacionalidad no registrada' %></p>
+    <p class="sinopsis"><%= autor.biografia || 'Sin biografía registrada.' %></p>
+
+    <h2>Libros en los que participa <span class="conteo"><%= libros.length %></span></h2>
+    <% if (libros.length) { %>
+      <ul class="lista-simple">
+        <% libros.forEach(function (l) { %>
+          <li><a href="<%= base %>/libros/<%= l.id %>"><%= l.titulo %></a></li>
+        <% }); %>
+      </ul>
+    <% } else { %>
+      <p class="vacio-linea">Todavía no está acreditado en ningún libro.</p>
+    <% } %>
+
+    <p><a href="<%= base %>/libros">← Volver al catálogo</a></p>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

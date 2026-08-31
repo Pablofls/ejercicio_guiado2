@@ -1,0 +1,44 @@
+<%# Vista del Usuario Registrado: rejilla de portadas, sin acciones de gestión. %>
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="catalogo__encabezado">
+    <h1>Catálogo</h1>
+    <span class="catalogo__conteo"><%= libros.length %> <%= libros.length === 1 ? 'libro' : 'libros' %></span>
+  </div>
+
+  <%- include('../parciales/buscador') %>
+
+  <% if (libros.length) { %>
+  <div class="rejilla">
+    <% libros.forEach(function (l) { %>
+    <article class="libro">
+      <a class="libro__enlace" href="<%= base %>/libros/<%= l.id %>">
+        <% if (l.portada) { %>
+          <img class="libro__portada" src="<%= base %>/uploads/<%= l.portada %>"
+               alt="<%= l.portada_alt || ('Portada de ' + l.titulo) %>" loading="lazy">
+        <% } else { %>
+          <div class="libro__portada-vacia"><%= l.titulo %></div>
+        <% } %>
+        <h2 class="libro__titulo"><%= l.titulo %></h2>
+      </a>
+      <p class="libro__autor"><%= l.autores || 'Autor no registrado' %></p>
+      <p class="libro__categoria"><%= l.categoria %> · <%= l.formato %></p>
+      <p class="libro__pie">
+        <span class="libro__precio">$<%= Number(l.precio).toFixed(2) %></span>
+        <% if (l.stock > 0) { %>
+          <span class="existencias existencias--si">Disponible</span>
+        <% } else { %>
+          <span class="existencias existencias--no">Sin existencias</span>
+        <% } %>
+      </p>
+    </article>
+    <% }); %>
+  </div>
+  <% } else { %>
+  <div class="vacio">
+    <p><% if (q) { %>Ningún libro coincide con «<%= q %>».<% } else { %>Todavía no hay libros en el catálogo.<% } %></p>
+    <% if (q) { %><p><a href="<%= base %>/libros">Ver todo el catálogo</a></p><% } %>
+  </div>
+  <% } %>
+</main>
+<%- include('../parciales/pie') %>

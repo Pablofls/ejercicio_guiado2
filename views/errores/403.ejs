@@ -1,0 +1,9 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="vacio">
+    <h1>403 · Acceso denegado</h1>
+    <p><%= typeof mensaje !== 'undefined' && mensaje ? mensaje : 'Esta sección está reservada al Administrador.' %></p>
+    <p><a href="<%= typeof base !== 'undefined' ? base : '' %>/libros">← Volver al catálogo</a></p>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,11 @@
+<%# Búsqueda por ISBN, título o autor (RF-05). GET, no POST: el resultado es
+    una consulta, debe poder marcarse y compartirse por URL. %>
+<form class="buscador" method="GET" action="<%= base %>/libros" role="search">
+  <label class="visualmente-oculto" for="q">Buscar libro</label>
+  <input type="search" id="q" name="q" value="<%= typeof q !== 'undefined' ? q : '' %>"
+         placeholder="Buscar por ISBN, título o autor…" maxlength="200">
+  <button type="submit" class="boton">Buscar</button>
+  <% if (typeof q !== 'undefined' && q) { %>
+    <a class="boton boton--sutil" href="<%= base %>/libros">Limpiar</a>
+  <% } %>
+</form>

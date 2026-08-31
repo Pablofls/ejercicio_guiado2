@@ -1,0 +1,33 @@
+<%- include('../parciales/cabeza') %>
+<main class="acceso">
+  <span class="acceso__marca">Librería Online</span>
+  <p class="acceso__lema">Catálogo de libros · UDEM</p>
+  <h1 class="acceso__titulo">Crear cuenta</h1>
+  <%- include('../parciales/errores') %>
+  <form method="POST" action="<%= base %>/registro" novalidate>
+    <%- include('../parciales/csrf') %>
+    <div class="campo">
+      <label for="nombre">Nombre</label>
+      <input type="text" id="nombre" name="nombre" value="<%= datos.nombre || '' %>"
+             autocomplete="name" required autofocus maxlength="100">
+    </div>
+    <div class="campo">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" name="email" value="<%= datos.email || '' %>"
+             autocomplete="email" required maxlength="150">
+    </div>
+    <div class="campo">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password"
+             autocomplete="new-password" minlength="8" required>
+      <p class="ayuda">Al menos 8 caracteres, con una letra y un número.</p>
+    </div>
+    <button type="submit" class="boton--bloque">Registrarme</button>
+  </form>
+  <p class="acceso__pie">
+    Las cuentas nuevas se crean con rol <strong>lector</strong>.
+    Sólo el Administrador puede cambiar roles.
+  </p>
+  <p class="acceso__pie">¿Ya tienes cuenta? <a href="<%= base %>/login">Inicia sesión</a></p>
+</main>
+<%- include('../parciales/pie') %>

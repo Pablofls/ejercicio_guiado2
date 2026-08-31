@@ -1,0 +1,25 @@
+<%#
+  Cabecera comun. Recibe `titulo` de cada vista, y `base` / `usuario` de
+  middleware/locals.js.
+
+  Escapado: la etiqueta de salida escapada de EJS (la del signo igual) convierte
+  los caracteres de HTML en entidades; la de salida cruda (la del guion) no lo
+  hace. En todo el proyecto la cruda se usa unicamente para incluir parciales,
+  nunca para datos. Por eso un titulo de libro que contenga una etiqueta script
+  se imprime como texto y no se ejecuta.
+%> escapa el valor y <%- %> no. En todo este
+  proyecto sólo se usa <%- %> para incluir parciales, nunca para datos: un
+  título de libro que contenga <script> se imprime como texto, no se ejecuta.
+%>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title><%= titulo %> · Librería</title>
+<link rel="stylesheet" href="<%= typeof base !== 'undefined' ? base : '' %>/css/style.css">
+</head>
+<body>
+<%- include('aviso') %>
+<% if (typeof usuario !== 'undefined' && usuario) { %><%- include('barra') %><% } %>

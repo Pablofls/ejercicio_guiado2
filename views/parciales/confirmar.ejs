@@ -1,0 +1,7 @@
+<%# Formulario de una acción destructiva. La confirmación en el navegador es
+    cortesía; lo que realmente protege es que sea POST + token CSRF + requireAdmin. %>
+<form method="POST" action="<%= accion %>" class="en-linea"
+      data-confirmar="<%= mensaje %>">
+  <%- include('csrf') %>
+  <button type="submit" class="boton boton--peligro boton--menudo"><%= etiqueta %></button>
+</form>

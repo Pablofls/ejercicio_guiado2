@@ -1,0 +1,40 @@
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel panel--angosto">
+    <h1><%= titulo %></h1>
+    <p class="libro__autor">Para: <a href="<%= base %>/libros/<%= libro.id %>"><%= libro.titulo %></a></p>
+    <%- include('../parciales/errores') %>
+
+    <%# enctype multipart/form-data: es lo que exige una subida de archivo. %>
+    <form method="POST" action="<%= base %>/imagenes/<%= libro.id %>"
+          enctype="multipart/form-data" novalidate>
+      <%- include('../parciales/csrf') %>
+      <div class="campo">
+        <label for="imagen">Archivo <span class="req">*</span></label>
+        <input type="file" id="imagen" name="imagen"
+               accept="image/jpeg,image/png,image/webp" required>
+        <p class="ayuda">
+          JPG, PNG o WebP · máximo 2 MB. El servidor comprueba también los
+          primeros bytes del archivo: renombrar un archivo a <code>.png</code>
+          no basta para que se acepte.
+        </p>
+      </div>
+      <div class="campo">
+        <label for="texto_alternativo">Texto alternativo <span class="req">*</span></label>
+        <input type="text" id="texto_alternativo" name="texto_alternativo"
+               maxlength="200" required
+               placeholder="Portada de <%= libro.titulo %>">
+        <p class="ayuda">Describe la imagen para quien usa lector de pantalla.</p>
+      </div>
+      <label class="casilla">
+        <input type="checkbox" name="es_portada" value="true">
+        Usar como portada del libro
+      </label>
+      <div class="acciones">
+        <button type="submit" class="boton">Subir</button>
+        <a class="boton boton--sutil" href="<%= base %>/libros/<%= libro.id %>">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

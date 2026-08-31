@@ -1,0 +1,49 @@
+<%# Vista del Administrador: tabla de gestión. %>
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <div class="panel__encabezado">
+      <h1>Libros</h1>
+      <a class="boton" href="<%= base %>/libros/nuevo">+ Nuevo libro</a>
+    </div>
+
+    <%- include('../parciales/buscador') %>
+
+    <% if (libros.length) { %>
+    <div class="tabla-desplazable">
+    <table>
+      <thead>
+        <tr><th>ISBN</th><th>Título</th><th>Autores</th><th>Categoría</th>
+            <th>Formato</th><th class="num">Precio</th><th class="num">Stock</th>
+            <th class="num">Img</th><th class="num">Conc.</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <% libros.forEach(function (l) { %>
+        <tr>
+          <td class="mono"><%= l.isbn %></td>
+          <td><a href="<%= base %>/libros/<%= l.id %>"><%= l.titulo %></a></td>
+          <td><%= l.autores %></td>
+          <td><%= l.categoria %></td>
+          <td><%= l.formato %></td>
+          <td class="num">$<%= Number(l.precio).toFixed(2) %></td>
+          <td class="num <%= l.stock === 0 ? 'alerta' : '' %>"><%= l.stock %></td>
+          <td class="num"><%= l.total_imagenes %></td>
+          <td class="num"><%= l.total_conceptos %></td>
+          <td class="acciones-celda">
+            <a href="<%= base %>/libros/<%= l.id %>/editar">Editar</a>
+            <%- include('../parciales/confirmar', {
+                  accion: base + '/libros/' + l.id + '/eliminar',
+                  mensaje: '¿Eliminar «' + l.titulo + '»? Se borrarán también sus imágenes y conceptos.',
+                  etiqueta: 'Eliminar' }) %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } else { %>
+      <div class="vacio"><p><% if (q) { %>Sin coincidencias para «<%= q %>».<% } else { %>Todavía no hay libros registrados.<% } %></p></div>
+    <% } %>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

@@ -1,0 +1,42 @@
+<%# Lista genérica de catálogo. La comparten géneros, categorías y formatos:
+    la ruta se deduce de rutaActual, así que no hay tres plantillas iguales. %>
+<% var ruta = rutaActual.split('/')[1]; -%>
+<%- include('../parciales/cabeza') %>
+<main class="container">
+  <div class="panel">
+    <div class="panel__encabezado">
+      <h1><%= titulo %></h1>
+      <a class="boton" href="<%= base %>/<%= ruta %>/nuevo">+ Nuevo</a>
+    </div>
+    <% if (registros.length) { %>
+    <div class="tabla-desplazable">
+    <table>
+      <thead><tr><th>Nombre</th><th>Descripción</th><th class="num">Libros</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <% registros.forEach(function (r) { %>
+        <tr>
+          <td><strong><%= r.nombre %></strong></td>
+          <td><%= r.descripcion || '' %></td>
+          <td class="num"><%= r.libros %></td>
+          <td class="acciones-celda">
+            <a href="<%= base %>/<%= ruta %>/<%= r.id %>/editar">Editar</a>
+            <% if (r.libros > 0) { %>
+              <span class="ayuda-linea" title="Hay libros que lo usan; la base de datos impide borrarlo">En uso</span>
+            <% } else { %>
+              <%- include('../parciales/confirmar', {
+                    accion: base + '/' + ruta + '/' + r.id + '/eliminar',
+                    mensaje: '¿Eliminar «' + r.nombre + '»?',
+                    etiqueta: 'Eliminar' }) %>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } else { %>
+      <div class="vacio"><p>Todavía no hay registros.</p></div>
+    <% } %>
+  </div>
+</main>
+<%- include('../parciales/pie') %>

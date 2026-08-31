@@ -1,0 +1,10 @@
+<%# Lista de errores de validación server-side. Se muestra sobre el formulario
+    con role="alert" para que un lector de pantalla la anuncie. %>
+<% if (errores && errores.length) { %>
+<div class="errores" role="alert">
+  <p class="errores__titulo">Revisa lo siguiente:</p>
+  <ul>
+    <% errores.forEach(function (e) { %><li><%= e %></li><% }); %>
+  </ul>
+</div>
+<% } %>

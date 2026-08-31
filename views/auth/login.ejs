@@ -1,0 +1,24 @@
+<%- include('../parciales/cabeza') %>
+<main class="acceso">
+  <span class="acceso__marca">Librería Online</span>
+  <p class="acceso__lema">Catálogo de libros · UDEM</p>
+  <h1 class="acceso__titulo">Iniciar sesión</h1>
+  <%- include('../parciales/errores') %>
+  <form method="POST" action="<%= base %>/login" novalidate>
+    <%- include('../parciales/csrf') %>
+    <div class="campo">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" name="email" value="<%= datos.email || '' %>"
+             placeholder="tu@correo.com" autocomplete="email" required autofocus
+             maxlength="150">
+    </div>
+    <div class="campo">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password"
+             placeholder="••••••••" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="boton--bloque">Entrar</button>
+  </form>
+  <p class="acceso__pie">¿No tienes cuenta? <a href="<%= base %>/registro">Regístrate</a></p>
+</main>
+<%- include('../parciales/pie') %>

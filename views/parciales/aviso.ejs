@@ -1,0 +1,8 @@
+<%# Aviso de un solo uso, puesto en la sesión antes de un redirect. %>
+<% if (typeof aviso !== 'undefined' && aviso) { %>
+<div class="toast toast--<%= aviso.tipo === 'exito' ? 'exito' : 'error' %>" id="toast" role="status" aria-live="polite">
+  <span class="toast__icono" aria-hidden="true"><%= aviso.tipo === 'exito' ? '✓' : '!' %></span>
+  <p class="toast__texto"><%= aviso.mensaje %></p>
+  <button type="button" class="toast__cerrar" aria-label="Cerrar aviso">×</button>
+</div>
+<% } %>
