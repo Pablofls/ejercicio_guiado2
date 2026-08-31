@@ -49,6 +49,8 @@ Petición HTTP
 
 > Las vistas no usan motor de plantillas (Pug, EJS, etc.). Cada `*.views.js` genera HTML con template literals. El helper `src/shared/layout.js` evita repetir el `<html>/<head>/<body>` en cada vista.
 
+> **Escapado obligatorio.** Como el HTML se arma con template literals, todo valor que venga de la base de datos o del usuario debe pasar por `esc()` de `layout.js` antes de interpolarse — también dentro de atributos (`value="${esc(...)}"`). Sin eso, un título de libro que contenga `<script>` se ejecutaría en el navegador de quien abra la lista.
+
 ---
 
 ## Hosting en GCP
@@ -89,7 +91,7 @@ ejercicio_guiado2/
 │   └── uploads/                      # Imágenes subidas por Multer (servidas como estáticos)
 └── src/
     ├── shared/
-    │   ├── layout.js                 # Helper page(title, content) → HTML completo
+    │   ├── layout.js                  # page() → HTML, esc() → escapado, nav() → barra según rol
     │   └── middleware.js             # requireLogin y requireAdmin
     └── modules/
         ├── auth/
@@ -99,7 +101,7 @@ ejercicio_guiado2/
         │   └── auth.routes.js        # GET/POST /, /login, /registro, /logout
         ├── libros/
         │   ├── libros.model.js       # getAll, getById, getImagenes, getConceptos, create, update, remove
-        │   ├── libros.views.js       # listaView, formularioView, detalleView
+        │   ├── libros.views.js        # catalogoView (lector), listaView (admin), formularioView, detalleView
         │   ├── libros.controller.js  # getLista, getNuevo, postCrear, getDetalle, getEditar, postActualizar, postEliminar
         │   └── libros.routes.js      # CRUD /libros
         ├── autores/
@@ -137,7 +139,7 @@ ejercicio_guiado2/
 | **View** | `*.views.js` | Genera strings HTML a partir de datos. No hace queries |
 | **Controller** | `*.controller.js` | Orquesta: llama al model, pasa resultado a la view, envía respuesta |
 | **Routes** | `*.routes.js` | Solo mapea método HTTP + URL → función del controller (+ middleware) |
-| **Shared** | `src/shared/` | `layout.js` (wrapper HTML) y `middleware.js` (guards de sesión) |
+| **Shared** | `src/shared/` | `layout.js` (wrapper HTML, `esc()` y `nav()`) y `middleware.js` (guards de sesión) |
 
 ---
 
@@ -328,11 +330,11 @@ Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr
 | POST   | `/registro` | `postRegistro`        | Inserta usuario con hash de contraseña   |
 | GET    | `/logout`   | `getLogout`           | Destruye la sesión                       |
 
-### Libros (`src/modules/libros/`) — requiere `requireLogin`
+### Libros (`src/modules/libros/`) — lectura `requireLogin`, gestión `requireAdmin`
 
 | Método | Ruta                   | Controller       | Descripción                                        |
 |--------|------------------------|------------------|----------------------------------------------------|
-| GET    | `/libros`              | `getLista`       | Lista todos los libros (JOIN autores + categorías) |
+| GET    | `/libros`              | `getLista`       | Catálogo con portadas (lector) o tabla de gestión (admin) |
 | GET    | `/libros/nuevo`        | `getNuevo`       | Formulario de creación                             |
 | POST   | `/libros`              | `postCrear`      | Inserta libro nuevo                                |
 | GET    | `/libros/:id`          | `getDetalle`     | Detalle + imágenes + conceptos del libro           |
@@ -340,7 +342,7 @@ Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr
 | POST   | `/libros/:id/editar`   | `postActualizar` | Actualiza el libro                                 |
 | POST   | `/libros/:id/eliminar` | `postEliminar`   | Elimina libro (cascade: imágenes y conceptos)      |
 
-### Autores (`src/modules/autores/`) — requiere `requireLogin`
+### Autores (`src/modules/autores/`) — requiere `requireAdmin`
 
 | Método | Ruta                    | Controller       | Descripción          |
 |--------|-------------------------|------------------|----------------------|
@@ -351,7 +353,7 @@ Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr
 | POST   | `/autores/:id/editar`   | `postActualizar` | Actualiza autor      |
 | POST   | `/autores/:id/eliminar` | `postEliminar`   | Elimina autor        |
 
-### Categorías (`src/modules/categorias/`) — requiere `requireLogin`
+### Categorías (`src/modules/categorias/`) — requiere `requireAdmin`
 
 | Método | Ruta                       | Controller       | Descripción            |
 |--------|----------------------------|------------------|------------------------|
@@ -362,7 +364,7 @@ Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr
 | POST   | `/categorias/:id/editar`   | `postActualizar` | Actualiza categoría    |
 | POST   | `/categorias/:id/eliminar` | `postEliminar`   | Elimina categoría      |
 
-### Conceptos (`src/modules/conceptos/`) — requiere `requireLogin`
+### Conceptos (`src/modules/conceptos/`) — requiere `requireAdmin`
 
 | Método | Ruta                          | Controller       | Descripción                              |
 |--------|-------------------------------|------------------|------------------------------------------|
@@ -372,7 +374,7 @@ Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr
 | POST   | `/conceptos/:id/editar`       | `postActualizar` | Actualiza concepto, redirige al libro    |
 | POST   | `/conceptos/:id/eliminar`     | `postEliminar`   | Elimina concepto, redirige al libro      |
 
-### Imágenes (`src/modules/imagenes/`) — requiere `requireLogin`
+### Imágenes (`src/modules/imagenes/`) — requiere `requireAdmin`
 
 | Método | Ruta                        | Controller    | Descripción                                         |
 |--------|-----------------------------|---------------|-----------------------------------------------------|
@@ -380,7 +382,7 @@ Los archivos de `db/applied/` son historial: no se editan ni se vuelven a correr
 | POST   | `/imagenes/:libro_id`       | `postSubir`   | Sube archivo (Multer) y registra en BD              |
 | POST   | `/imagenes/:id/eliminar`    | `postEliminar`| Elimina registro de BD (no borra el archivo físico) |
 
-### Usuarios (`src/modules/usuarios/`) — requiere `requireLogin`
+### Usuarios (`src/modules/usuarios/`) — requiere `requireAdmin`
 
 | Método | Ruta                      | Controller       | Descripción                                      |
 |--------|---------------------------|------------------|--------------------------------------------------|
@@ -404,19 +406,22 @@ El sistema usa **`express-session`** con almacenamiento en memoria (se pierde al
 
 ### Middleware (`src/shared/middleware.js`)
 
-| Función        | Comportamiento                                                          |
-|----------------|-------------------------------------------------------------------------|
-| `requireLogin` | Redirige a `/login` si no hay sesión activa                             |
-| `requireAdmin` | Redirige a `/login` si no hay sesión; error si `rol !== 'admin'`        |
-
-> `requireAdmin` está definido pero **no se usa en ninguna ruta actualmente**. Para proteger una ruta para administradores, reemplaza `requireLogin` por `requireAdmin` en el archivo `*.routes.js` correspondiente.
+| Función        | Comportamiento                                                                            |
+|----------------|-------------------------------------------------------------------------------------------|
+| `requireLogin` | Redirige a `/login` si no hay sesión activa                                               |
+| `requireAdmin` | Redirige a `/login` si no hay sesión; responde 403 con página propia si `rol !== 'admin'` |
 
 ### Roles disponibles
 
-| Rol      | Descripción                         |
-|----------|-------------------------------------|
-| `lector` | Valor por defecto al registrarse    |
-| `admin`  | Asignado manualmente en `/usuarios` |
+| Rol      | Puede                                                                                   | Asignación                 |
+|----------|-----------------------------------------------------------------------------------------|----------------------------|
+| `lector` | Ver el catálogo (`GET /libros`) y el detalle de un libro                                | Por defecto al registrarse |
+| `admin`  | Todo lo anterior + gestionar libros, autores, categorías, conceptos, imágenes y usuarios | Manual, desde `/usuarios`  |
+
+La restricción se aplica en **dos capas**, y las dos son necesarias:
+
+1. **Rutas** — cada `*.routes.js` protege con `requireAdmin` las operaciones de gestión. Es lo que realmente impide el acceso: sin esto un lector podría entrar por URL directa o con un POST manual.
+2. **Interfaz** — el helper `nav(usuario)` de `src/shared/layout.js` solo dibuja los enlaces de gestión si `rol === 'admin'`, y `detalleView` oculta los botones de editar y eliminar. Esto es comodidad visual, **no** es la protección.
 
 ---
 
