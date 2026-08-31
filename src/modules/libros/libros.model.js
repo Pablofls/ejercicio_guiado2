@@ -1,11 +1,21 @@
 const db = require('../../../db');
 
 async function getAll() {
+    // La subconsulta lateral trae la portada de cada libro: la imagen marcada como
+    // principal y, si no hay ninguna, la más antigua.
     const result = await db.query(`
-        SELECT l.*, a.nombre AS autor_nombre, c.nombre AS categoria_nombre
+        SELECT l.*, a.nombre AS autor_nombre, c.nombre AS categoria_nombre,
+               img.ruta_archivo AS portada
         FROM libros l
         LEFT JOIN autores a ON l.autor_id = a.id
         LEFT JOIN categorias c ON l.categoria_id = c.id
+        LEFT JOIN LATERAL (
+            SELECT ruta_archivo
+            FROM imagenes_libros
+            WHERE libro_id = l.id
+            ORDER BY es_principal DESC, id
+            LIMIT 1
+        ) img ON TRUE
         ORDER BY l.titulo`);
     return result.rows;
 }
@@ -21,7 +31,10 @@ async function getById(id) {
 }
 
 async function getImagenes(libroId) {
-    const result = await db.query('SELECT * FROM imagenes_libros WHERE libro_id = $1', [libroId]);
+    const result = await db.query(
+        'SELECT * FROM imagenes_libros WHERE libro_id = $1 ORDER BY es_principal DESC, id',
+        [libroId]
+    );
     return result.rows;
 }
 

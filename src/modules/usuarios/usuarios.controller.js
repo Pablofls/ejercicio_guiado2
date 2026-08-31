@@ -3,11 +3,11 @@ const UsuariosViews = require('./usuarios.views');
 
 async function getLista(req, res) {
     const usuarios = await UsuariosModel.getAll();
-    res.send(UsuariosViews.listaView(usuarios));
+    res.send(UsuariosViews.listaView(usuarios, req.session.usuario));
 }
 
 function getNuevo(req, res) {
-    res.send(UsuariosViews.formularioView('Nuevo Usuario', '/usuarios', null));
+    res.send(UsuariosViews.formularioView('Nuevo usuario', '/usuarios', null, req.session.usuario));
 }
 
 async function postCrear(req, res) {
@@ -18,7 +18,7 @@ async function postCrear(req, res) {
 async function getEditar(req, res) {
     const usuario = await UsuariosModel.getById(req.params.id);
     if (!usuario) return res.send('Usuario no encontrado. <a href="/usuarios">Volver</a>');
-    res.send(UsuariosViews.formularioView('Editar Usuario', `/usuarios/${usuario.id}/editar`, usuario));
+    res.send(UsuariosViews.formularioView('Editar usuario', `/usuarios/${usuario.id}/editar`, usuario, req.session.usuario));
 }
 
 async function postActualizar(req, res) {

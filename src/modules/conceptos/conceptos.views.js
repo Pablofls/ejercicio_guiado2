@@ -1,25 +1,40 @@
-const { page } = require('../../shared/layout');
+const { page, esc, nav } = require('../../shared/layout');
 
-function formularioNuevoView(libro) {
-    return page('Nuevo Concepto', `
-<h2>Nuevo Concepto para: ${libro.titulo}</h2>
-<form method="POST" action="/conceptos/${libro.id}">
-  <label>Término:</label><input type="text" name="termino" required>
-  <label>Definición:</label><textarea name="definicion" required></textarea>
-  <button type="submit">Guardar</button>
-</form>
-<a href="/libros/${libro.id}">Volver al libro</a>`);
+function formularioNuevoView(libro, usuario) {
+    return page('Nuevo concepto', `
+${nav(usuario)}
+<main class="container">
+  <div class="panel">
+    <h1>Nuevo concepto</h1>
+    <p class="libro__autor">Para: ${esc(libro.titulo)}</p>
+    <form method="POST" action="/conceptos/${libro.id}">
+      <div class="campo"><label for="termino">Término</label>
+        <input type="text" id="termino" name="termino" required></div>
+      <div class="campo"><label for="definicion">Definición</label>
+        <textarea id="definicion" name="definicion" required></textarea></div>
+      <button type="submit">Guardar</button>
+    </form>
+    <p><a href="/libros/${libro.id}">Volver al libro</a></p>
+  </div>
+</main>`, { contenedor: false });
 }
 
-function formularioEditarView(concepto) {
-    return page('Editar Concepto', `
-<h2>Editar Concepto</h2>
-<form method="POST" action="/conceptos/${concepto.id}/editar">
-  <label>Término:</label><input type="text" name="termino" value="${concepto.termino}" required>
-  <label>Definición:</label><textarea name="definicion" required>${concepto.definicion}</textarea>
-  <button type="submit">Actualizar</button>
-</form>
-<a href="/libros/${concepto.libro_id}">Volver al libro</a>`);
+function formularioEditarView(concepto, usuario) {
+    return page('Editar concepto', `
+${nav(usuario)}
+<main class="container">
+  <div class="panel">
+    <h1>Editar concepto</h1>
+    <form method="POST" action="/conceptos/${concepto.id}/editar">
+      <div class="campo"><label for="termino">Término</label>
+        <input type="text" id="termino" name="termino" value="${esc(concepto.termino)}" required></div>
+      <div class="campo"><label for="definicion">Definición</label>
+        <textarea id="definicion" name="definicion" required>${esc(concepto.definicion)}</textarea></div>
+      <button type="submit">Actualizar</button>
+    </form>
+    <p><a href="/libros/${concepto.libro_id}">Volver al libro</a></p>
+  </div>
+</main>`, { contenedor: false });
 }
 
 module.exports = { formularioNuevoView, formularioEditarView };

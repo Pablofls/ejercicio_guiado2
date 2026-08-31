@@ -4,8 +4,11 @@ const AutoresModel = require('../autores/autores.model');
 const CategoriasModel = require('../categorias/categorias.model');
 
 async function getLista(req, res) {
+    const usuario = req.session.usuario;
     const libros = await LibrosModel.getAll();
-    res.send(LibrosViews.listaView(libros, req.session.usuario));
+    // El lector ve el catálogo con portadas; el admin, la tabla de gestión.
+    const vista = usuario.rol === 'admin' ? LibrosViews.listaView : LibrosViews.catalogoView;
+    res.send(vista(libros, usuario));
 }
 
 async function getNuevo(req, res) {
@@ -13,7 +16,7 @@ async function getNuevo(req, res) {
         AutoresModel.getAll(),
         CategoriasModel.getAll()
     ]);
-    res.send(LibrosViews.formularioView('Nuevo Libro', '/libros', null, autores, categorias));
+    res.send(LibrosViews.formularioView('Nuevo libro', '/libros', null, autores, categorias, req.session.usuario));
 }
 
 async function postCrear(req, res) {
@@ -28,7 +31,7 @@ async function getDetalle(req, res) {
         LibrosModel.getImagenes(req.params.id),
         LibrosModel.getConceptos(req.params.id)
     ]);
-    res.send(LibrosViews.detalleView(libro, imagenes, conceptos));
+    res.send(LibrosViews.detalleView(libro, imagenes, conceptos, req.session.usuario));
 }
 
 async function getEditar(req, res) {
@@ -38,7 +41,7 @@ async function getEditar(req, res) {
         CategoriasModel.getAll()
     ]);
     if (!libro) return res.send('Libro no encontrado. <a href="/libros">Volver</a>');
-    res.send(LibrosViews.formularioView('Editar Libro', `/libros/${libro.id}/editar`, libro, autores, categorias));
+    res.send(LibrosViews.formularioView('Editar libro', `/libros/${libro.id}/editar`, libro, autores, categorias, req.session.usuario));
 }
 
 async function postActualizar(req, res) {

@@ -3,11 +3,11 @@ const AutoresViews = require('./autores.views');
 
 async function getLista(req, res) {
     const autores = await AutoresModel.getAll();
-    res.send(AutoresViews.listaView(autores));
+    res.send(AutoresViews.listaView(autores, req.session.usuario));
 }
 
 function getNuevo(req, res) {
-    res.send(AutoresViews.formularioView('Nuevo Autor', '/autores', null));
+    res.send(AutoresViews.formularioView('Nuevo autor', '/autores', null, req.session.usuario));
 }
 
 async function postCrear(req, res) {
@@ -18,7 +18,7 @@ async function postCrear(req, res) {
 async function getEditar(req, res) {
     const autor = await AutoresModel.getById(req.params.id);
     if (!autor) return res.send('Autor no encontrado. <a href="/autores">Volver</a>');
-    res.send(AutoresViews.formularioView('Editar Autor', `/autores/${autor.id}/editar`, autor));
+    res.send(AutoresViews.formularioView('Editar autor', `/autores/${autor.id}/editar`, autor, req.session.usuario));
 }
 
 async function postActualizar(req, res) {

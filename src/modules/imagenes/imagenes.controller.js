@@ -25,7 +25,7 @@ const uploadMiddleware = upload.single('imagen');
 async function getNuevo(req, res) {
     const libro = await LibrosModel.getById(req.params.libro_id);
     if (!libro) return res.send('Libro no encontrado. <a href="/libros">Volver</a>');
-    res.send(ImagenesViews.formularioView(libro));
+    res.send(ImagenesViews.formularioView(libro, req.session.usuario));
 }
 
 async function postSubir(req, res) {

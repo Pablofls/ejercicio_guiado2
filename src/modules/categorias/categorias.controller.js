@@ -3,11 +3,11 @@ const CategoriasViews = require('./categorias.views');
 
 async function getLista(req, res) {
     const categorias = await CategoriasModel.getAll();
-    res.send(CategoriasViews.listaView(categorias));
+    res.send(CategoriasViews.listaView(categorias, req.session.usuario));
 }
 
 function getNuevo(req, res) {
-    res.send(CategoriasViews.formularioView('Nueva Categoría', '/categorias', null));
+    res.send(CategoriasViews.formularioView('Nueva categoría', '/categorias', null, req.session.usuario));
 }
 
 async function postCrear(req, res) {
@@ -18,7 +18,7 @@ async function postCrear(req, res) {
 async function getEditar(req, res) {
     const categoria = await CategoriasModel.getById(req.params.id);
     if (!categoria) return res.send('Categoría no encontrada. <a href="/categorias">Volver</a>');
-    res.send(CategoriasViews.formularioView('Editar Categoría', `/categorias/${categoria.id}/editar`, categoria));
+    res.send(CategoriasViews.formularioView('Editar categoría', `/categorias/${categoria.id}/editar`, categoria, req.session.usuario));
 }
 
 async function postActualizar(req, res) {

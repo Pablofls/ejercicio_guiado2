@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('./libros.controller');
-const { requireLogin } = require('../../shared/middleware');
+const { requireLogin, requireAdmin } = require('../../shared/middleware');
 
-router.get('/', requireLogin, controller.getLista);
-router.get('/nuevo', requireLogin, controller.getNuevo);
-router.post('/', requireLogin, controller.postCrear);
-router.get('/:id', requireLogin, controller.getDetalle);
-router.get('/:id/editar', requireLogin, controller.getEditar);
-router.post('/:id/editar', requireLogin, controller.postActualizar);
-router.post('/:id/eliminar', requireLogin, controller.postEliminar);
+// OJO: '/nuevo' debe declararse antes que '/:id', o '/libros/nuevo' entraría
+// en getDetalle con id = 'nuevo'.
+router.get('/', requireLogin, controller.getLista);          // catálogo: cualquier usuario
+router.get('/nuevo', requireAdmin, controller.getNuevo);     // gestión: solo admin
+router.post('/', requireAdmin, controller.postCrear);
+router.get('/:id', requireLogin, controller.getDetalle);     // detalle: cualquier usuario
+router.get('/:id/editar', requireAdmin, controller.getEditar);
+router.post('/:id/editar', requireAdmin, controller.postActualizar);
+router.post('/:id/eliminar', requireAdmin, controller.postEliminar);
 
 module.exports = router;
