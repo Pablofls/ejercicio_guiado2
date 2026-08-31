@@ -180,8 +180,8 @@ completo. Se documentan con captura **más** explicación.
 | MN-02 | RF-08 | En un libro, agregar el concepto «Bucket» con una definición propia | El término se reutiliza del catálogo; la definición es del libro | captura |
 | MN-03 | RF-09 | Subir dos imágenes y marcar la segunda como portada | La primera deja de ser portada sin intervención manual | captura antes/después |
 | MN-04 | RF-13 | Entrar a `/panel` como Administrador | Conteos por tabla, inventario por categoría, libros incompletos | captura |
-| MN-05 | RNF-08 | Abrir `http://IP_DEL_SERVIDOR/library` desde otro equipo | La aplicación responde bajo el prefijo; CSS, imágenes y formularios funcionan | captura del navegador externo |
-| MN-06 | RNF-08 | `curl http://IP_DEL_SERVIDOR:3000/` desde fuera de la VM | **Conexión rechazada**: Node no está expuesto | salida de terminal |
+| MN-05 | RNF-08 | Abrir `http://IP_DEL_SERVIDOR/library` desde otro equipo | La aplicación responde bajo el prefijo; CSS, imágenes y formularios funcionan | ✅ Verificado desde fuera de la VM: `/library/login` y `/library/registro` → 200, `/library/` → 302, CSS → 200, `/` → 404. Las cabeceras `nosniff`, `X-Frame-Options`, CSP y `Referrer-Policy` llegan íntegras a través del proxy |
+| MN-06 | RNF-08 | `curl http://IP_DEL_SERVIDOR:3000/` desde fuera de la VM | **Conexión rechazada**: Node no está expuesto | ✅ Verificado. Caso especialmente demostrativo: en el proyecto de GCP existía una regla de firewall `allow-3000` que abría el puerto 3000 a `0.0.0.0/0`. Aun con el firewall permitiendo el tráfico, el puerto **no responde**, porque Node escucha únicamente en `127.0.0.1`. Es la prueba de que la protección no depende del firewall. PostgreSQL (5432) también cerrado |
 | MN-07 | RNF-10 | Reducir la ventana a 375 px de ancho | El catálogo se reordena en una columna, sin desbordamiento horizontal | captura |
 | MN-08 | RF-11 | Entrar como lector y comparar la barra superior con la del admin | El lector no ve los enlaces de gestión (complemento visual de PR-13) | captura de ambas |
 

@@ -81,6 +81,28 @@ en el proxy.
 
 ---
 
+### H-05 · Regla de firewall `allow-3000` innecesaria — PENDIENTE DE CERRAR
+
+El proyecto de GCP tiene una regla heredada, `allow-3000`, que abre el puerto
+3000 a `0.0.0.0/0` **sin etiqueta de destino**, es decir, aplicada a todas las
+instancias del proyecto.
+
+Se comprobó desde fuera de la VM que el puerto **no responde** pese a esa regla,
+porque Node escucha sólo en `127.0.0.1`. Es una buena demostración de defensa en
+profundidad: la protección real no la da el firewall, sino la interfaz de
+escucha. Pero la regla sigue siendo superficie de ataque innecesaria — bastaría
+que alguien cambiara `APP_HOST` a `0.0.0.0` para exponer la aplicación sin
+proxy, sin TLS y sin las restricciones del `location` de NGINX.
+
+Cierre recomendado:
+
+```bash
+gcloud compute firewall-rules delete allow-3000
+```
+
+Antes de borrarla conviene conservar la captura de que el puerto no respondía
+aun estando abierta: es la evidencia de MN-06.
+
 ## Controles aplicados
 
 ### 1. Contraseñas
