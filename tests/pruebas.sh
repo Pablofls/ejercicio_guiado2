@@ -179,6 +179,49 @@ probar PR-45 "Subida sin token CSRF: rechazada"                403 \
 probar PR-46 "PNG válido con texto alternativo: aceptado"     302 "$(subir "$TMP/real.png" image/png)"
 
 echo
+echo "-- HTML bien formado (RNF-10) --"
+# Estas pruebas existen porque un comentario de plantilla mal cerrado llegó a
+# imprimirse como HTML, con una etiqueta script sin cerrar que dejaba la página
+# en blanco. El servidor devolvía 200 y la página contenía los textos esperados,
+# así que ninguna prueba de código de estado lo detectó: sólo se vio al abrirla
+# en un navegador. Se comprueba la FORMA del documento, no sólo su contenido.
+#
+# Las públicas se piden SIN sesión: con sesión de admin, /login redirige y
+# devolvería un cuerpo vacío.
+publicas="/login /registro"
+privadas="/libros /libros/1 /panel /usuarios /autores /conceptos"
+
+# Imprime la primera línea que no esté en blanco.
+primera_linea() { grep -m1 -v '^[[:space:]]*$'; }
+
+malas_doctype=""
+malas_cierre=""
+malas_script=""
+
+revisar_pagina() {   # $1 = ruta, $2 = jar o vacío
+    local cuerpo
+    if [ -n "$2" ]; then cuerpo=$(curl -s -b "$2" "$BASE_URL$1"); else cuerpo=$(curl -s "$BASE_URL$1"); fi
+
+    [ "$(printf '%s\n' "$cuerpo" | primera_linea)" = "<!DOCTYPE html>" ] \
+        || malas_doctype="$malas_doctype $1"
+
+    printf '%s' "$cuerpo" | tail -c 40 | grep -q '</html>' \
+        || malas_cierre="$malas_cierre $1"
+
+    local abiertos cerrados
+    abiertos=$(printf '%s' "$cuerpo" | grep -o '<script' | wc -l | tr -d ' ')
+    cerrados=$(printf '%s' "$cuerpo" | grep -o '</script>' | wc -l | tr -d ' ')
+    [ "$abiertos" = "$cerrados" ] || malas_script="$malas_script $1($abiertos/$cerrados)"
+}
+
+for pagina in $publicas; do revisar_pagina "$pagina" ""; done
+for pagina in $privadas; do revisar_pagina "$pagina" "$JA"; done
+
+probar PR-47 "Toda página empieza por <!DOCTYPE html>"        "" "$malas_doctype"
+probar PR-48 "Etiquetas <script> balanceadas"                 "" "$malas_script"
+probar PR-49 "Toda página cierra con </html>"                 "" "$malas_cierre"
+
+echo
 echo "-- Cierre de sesión (RF-03) --"
 probar PR-38 "GET /logout redirige" 302 "$(codigo -b "$JA" -c "$JA" "$BASE_URL/logout")"
 probar PR-39 "Tras cerrar sesión, /usuarios ya no es accesible" 302 "$(codigo -b "$JA" "$BASE_URL/usuarios")"

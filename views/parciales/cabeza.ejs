@@ -7,11 +7,14 @@
   hace. En todo el proyecto la cruda se usa unicamente para incluir parciales,
   nunca para datos. Por eso un titulo de libro que contenga una etiqueta script
   se imprime como texto y no se ejecuta.
-%> escapa el valor y <%- %> no. En todo este
-  proyecto sólo se usa <%- %> para incluir parciales, nunca para datos: un
-  título de libro que contenga <script> se imprime como texto, no se ejecuta.
-%>
-<!DOCTYPE html>
+
+  CUIDADO al editar este comentario: EJS lo cierra en la primera marca de cierre
+  que encuentre. Si aqui dentro se escribe cualquier etiqueta de EJS, aunque sea
+  para explicarla, el comentario termina ahi y todo lo que sigue se imprime como
+  HTML. Ya paso una vez: el texto suelto llevaba una etiqueta script sin cerrar
+  y el navegador se comia la pagina entera. Por eso las etiquetas de EJS se
+  mencionan aqui con palabras y nunca se teclean.
+%><!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
