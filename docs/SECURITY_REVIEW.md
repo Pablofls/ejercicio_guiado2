@@ -55,7 +55,24 @@ Corregido: el secreto se lee de `.env` y **la aplicación no arranca sin él**
 propósito: un valor por omisión inseguro es peor que un fallo al arrancar,
 porque pasa desapercibido.
 
-### H-03 · Sin límite de tamaño en las subidas — CORREGIDO
+### H-03 · `\prompt` de psql mostraba la contraseña al teclearla — CORREGIDO
+
+Los scripts que fijan la contraseña de los roles de PostgreSQL usaban `\prompt`,
+que **hace eco** de lo que se escribe. La contraseña quedaba visible en pantalla
+y en el scrollback de la terminal, y viajaba en texto plano dentro de la
+sentencia `ALTER ROLE`, con lo que podía acabar en los logs del servidor si
+estaba activado `log_statement`.
+
+Se detectó al ejecutarlo en la VM: la contraseña recién generada apareció impresa
+en la sesión.
+
+Corregido: ambos scripts (`db/00_create_database.sql` y el de `db/pending/`) usan
+`\password`, que oculta la entrada, pide confirmación y envía la contraseña ya
+cifrada con SCRAM, de modo que el texto plano nunca sale del cliente.
+
+La contraseña que se expuso durante ese primer intento fue rotada.
+
+### H-04 · Sin límite de tamaño en las subidas — CORREGIDO
 
 El `multer()` original no definía `limits`. Cualquiera con sesión de
 administrador podía llenar el disco de la VM. Ahora hay límite de 2 MB en Multer,

@@ -9,9 +9,13 @@
 -- libreria_app solo puede leer y escribir filas en las tablas del esquema
 -- public; no es dueño de las tablas, así que no puede hacer DROP ni ALTER.
 --
--- La contraseña de libreria_app NO se escribe en este archivo (repositorio
--- público). Se define a mano en la VM con el bloque \prompt de abajo y se
--- guarda únicamente en el .env de la VM, que no está versionado.
+-- Las contraseñas NO se escriben en este archivo (el repositorio es público).
+-- Se definen en la VM con \password, que oculta la entrada y transmite el
+-- valor ya cifrado con SCRAM. Se guardan únicamente en el .env de la VM, que
+-- no está versionado.
+--
+-- No se usa \prompt: hace eco de lo que se teclea, así que la contraseña
+-- quedaría visible en pantalla y en el scrollback de la terminal.
 -- =============================================================================
 
 -- Es idempotente: se puede volver a ejecutar sin romper nada. Los roles y la
@@ -19,25 +23,23 @@
 -- que se escriba en el prompt.
 
 -- Rol de aplicación: solo LOGIN. Sin SUPERUSER, CREATEDB, CREATEROLE ni BYPASSRLS.
-\prompt 'Contraseña para libreria_app (no se mostrará en el repositorio): ' app_pw
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'libreria_app') THEN
         CREATE ROLE libreria_app WITH LOGIN
             NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION;
     END IF;
 END $$;
-ALTER ROLE libreria_app WITH PASSWORD :'app_pw';
+\password libreria_app
 
 -- Rol dueño del esquema. Es quien ejecuta 01_schema.sql y quien puede hacer
 -- DDL. No se usa desde la aplicación.
-\prompt 'Contraseña para libreria_owner: ' owner_pw
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'libreria_owner') THEN
         CREATE ROLE libreria_owner WITH LOGIN
             NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
     END IF;
 END $$;
-ALTER ROLE libreria_owner WITH PASSWORD :'owner_pw';
+\password libreria_owner
 
 -- CREATE DATABASE no admite IF NOT EXISTS ni puede ir dentro de un bloque DO,
 -- así que se genera la sentencia sólo cuando hace falta y se ejecuta con \gexec.

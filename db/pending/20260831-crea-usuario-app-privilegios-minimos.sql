@@ -32,13 +32,18 @@
 --     sudo -u postgres psql -d libreria_db \
 --       -f db/pending/20260831-crea-usuario-app-privilegios-minimos.sql
 --
--- Pedirá la contraseña del rol nuevo de forma interactiva. NO la escribas en
--- ningún archivo: va únicamente en el .env de la VM, que no se versiona.
--- Genera una larga y aleatoria, por ejemplo con:
---     openssl rand -base64 24
+-- Pedirá la contraseña del rol nuevo con \password, que NO la muestra al
+-- escribirla y además la envía ya cifrada con SCRAM: el texto plano no viaja
+-- por la conexión ni queda en los logs del servidor.
+--
+-- NO la escribas en ningún archivo: va únicamente en el .env de la VM, que no
+-- se versiona. Genera una larga y aleatoria, por ejemplo con:
+--     node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"
+--
+-- Se usa \password y no \prompt porque \prompt SÍ hace eco de lo que se
+-- teclea: la contraseña quedaría escrita en la pantalla y en el scrollback de
+-- la terminal, que es exactamente lo que este proyecto trata de evitar.
 -- =============================================================================
-
-\prompt 'Contraseña para libreria_app (no se guarda en ningún archivo): ' app_pw
 
 -- Idempotente: si el rol ya existe, sólo se le fija la contraseña.
 DO $$ BEGIN
@@ -51,7 +56,8 @@ DO $$ BEGIN
     END IF;
 END $$;
 
-ALTER ROLE libreria_app WITH PASSWORD :'app_pw';
+-- Entrada oculta, y la contraseña se transmite ya cifrada.
+\password libreria_app
 
 -- Puede conectarse a la base y usar el esquema, pero NO crear objetos en él.
 -- Se usa current_database() en lugar del nombre escrito a mano, para que el
