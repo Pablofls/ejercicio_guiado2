@@ -284,6 +284,25 @@ db/pending/20260901-indices-en-fks.sql
 
 Cada archivo empieza con un comentario que explica qué hace y por qué.
 
+### Nunca credenciales en claro
+
+> **Ninguna credencial se escribe en claro en el repositorio.** Ni contraseñas, ni tokens, ni claves de API — en código, documentación, archivos `.sql` **y tampoco en los comentarios**.
+
+En un `.sql` que cambie una contraseña va el hash y nada más. El comentario dice qué hace la query ("cambia la contraseña del usuario X"), nunca cuál es el valor:
+
+```sql
+-- MAL: publica la credencial aunque el UPDATE solo lleve el hash
+-- Cambia la contraseña de admin@libreria.com a "admin".
+
+-- BIEN
+-- Cambia la contraseña de admin@libreria.com. Hash bcrypt (cost 10),
+-- el mismo factor que usa auth.model.js. El valor se comunica aparte.
+```
+
+Esto vale también para el `.env`, para los ejemplos del README y para los datos de `demo.sql`.
+
+Borrar el archivo después **no deshace nada**: el repositorio es público y el historial de git conserva cada versión. Lo único que resuelve una credencial publicada es **rotarla**.
+
 ### Ciclo completo
 
 1. **Escribir** el `.sql` en `db/pending/`.

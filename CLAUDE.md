@@ -13,6 +13,7 @@ Por eso, **todo SQL se escribe pero no se ejecuta**:
 2. Nombre: `YYYYMMDD-descripcion-corta.sql`, con un comentario al inicio explicando qué hace y por qué.
 3. `db/applied/` es historial de lo ya ejecutado en la VM. Mueve ahí un archivo de `db/pending/` con `git mv` **en cuanto el usuario confirme que ya corrió la query** en la VM — nunca antes ni por tu cuenta. Tampoco edites los que ya están.
 4. Si algo aplicado hay que corregir, se escribe un archivo nuevo en `db/pending/`, no se modifica el viejo.
+5. **Nunca escribas una credencial en claro en el `.sql`, ni siquiera en los comentarios.** Va el hash y nada más; el comentario dice qué hace la query, no cuál es el valor.
 
 En el mismo cambio, siempre:
 
@@ -43,7 +44,8 @@ Al agregar código, sigue el patrón del módulo vecino más parecido en vez de 
 - Sin motor de plantillas: las vistas devuelven strings HTML.
 - Sin ORM: `pg` directo, siempre con queries parametrizadas (`$1`, `$2`…).
 - Código y documentación en español, igual que los nombres de tablas y módulos.
-- Las credenciales van en `.env` (no versionado). Nunca escribas contraseñas ni secretos en el repo, incluida la documentación.
+- **Ninguna credencial en claro en el repositorio.** Ni contraseñas, ni tokens, ni claves de API — en código, documentación, `.sql`, `demo.sql`, ejemplos del README **y tampoco en los comentarios**. Las credenciales reales viven solo en el `.env` de la VM, que no está versionado.
+  El repositorio es público y el historial de git conserva cada versión: borrar el archivo después no deshace la publicación, solo rotar la credencial lo hace. Si detectas una credencial en claro ya versionada, díselo al usuario en vez de limitarte a borrarla.
 
 ## Comandos
 
