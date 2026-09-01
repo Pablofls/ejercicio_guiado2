@@ -19,8 +19,12 @@ TRUNCATE libros_conceptos, libros_generos, libros_autores, imagenes_libros,
     RESTART IDENTITY CASCADE;
 
 -- usuarios: 1 administrador (la BD impide un segundo) + 29 lectores.
+-- El administrador usa admin@libreria.com; los lectores, un dominio distinto.
+-- No es un descuido: refleja el estado real de la instalacion. El correo del
+-- administrador se cambio desde la interfaz y el seed se alineo con eso, en vez
+-- de al reves, para que este archivo describa lo que de verdad hay en la VM.
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
-('Administrador', 'admin@libreria.udem.mx', '$2b$10$c/yES5ffi.7RI/BtxEDfhezl6Sc39xn9JnMyyuGYH3GTtIjXVi.vG', 'admin'),
+('Administrador', 'admin@libreria.com', '$2b$10$c/yES5ffi.7RI/BtxEDfhezl6Sc39xn9JnMyyuGYH3GTtIjXVi.vG', 'admin'),
 ('Ana Ruiz', 'ana.ruiz@libreria.udem.mx', '$2b$10$9znBNGqfsAR.ZMwkoGPhlOGE5zkXDuDO/0wA9VRBEP5LcYY1Drr5q', 'lector'),
 ('Bruno Salas', 'bruno.salas@libreria.udem.mx', '$2b$10$9znBNGqfsAR.ZMwkoGPhlOGE5zkXDuDO/0wA9VRBEP5LcYY1Drr5q', 'lector'),
 ('Carla Mendoza', 'carla.mendoza@libreria.udem.mx', '$2b$10$9znBNGqfsAR.ZMwkoGPhlOGE5zkXDuDO/0wA9VRBEP5LcYY1Drr5q', 'lector'),

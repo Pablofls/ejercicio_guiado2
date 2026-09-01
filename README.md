@@ -449,7 +449,7 @@ trigger `trg_portada_unica` apaga la anterior automáticamente.
 ```bash
 # Aplicación: 57 casos de la matriz
 BASE_URL=http://127.0.0.1:3000 \
-ADMIN_EMAIL='admin@libreria.udem.mx' ADMIN_PASS='…' \
+ADMIN_EMAIL='admin@libreria.com' ADMIN_PASS='…' \
 LECTOR_EMAIL='ana.ruiz@libreria.udem.mx' LECTOR_PASS='…' \
 bash tests/pruebas.sh
 

@@ -22,7 +22,7 @@ psql -U libreria_owner -d libreria_db -f db/03_all_quieries_before_stored_proced
 
 # 2. Aplicación: la matriz PR-01 … PR-46
 BASE_URL=http://127.0.0.1:3000/library \
-ADMIN_EMAIL='admin@libreria.udem.mx'  ADMIN_PASS='…' \
+ADMIN_EMAIL='admin@libreria.com'  ADMIN_PASS='…' \
 LECTOR_EMAIL='ana.ruiz@libreria.udem.mx' LECTOR_PASS='…' \
 bash tests/pruebas.sh
 ```

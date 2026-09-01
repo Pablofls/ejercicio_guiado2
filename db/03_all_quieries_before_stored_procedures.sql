@@ -96,7 +96,7 @@ FROM imagenes_libros WHERE libro_id = 1 ORDER BY es_portada DESC, id;
 -- Solo trae lo necesario. La comparacion del hash la hace bcrypt en Node,
 -- nunca la base de datos.
 SELECT id, nombre, email, password_hash, rol, activo
-FROM usuarios WHERE lower(email) = lower('admin@libreria.udem.mx');
+FROM usuarios WHERE lower(email) = lower('admin@libreria.com');
 
 \echo '== C11: altas =='
 -- INSERT ... RETURNING evita una segunda consulta para recuperar el id.
@@ -198,7 +198,7 @@ END $$;
 \echo '-- C24: segundo administrador -> esperado 23505 por ux_usuarios_admin_unico'
 DO $$ BEGIN
     INSERT INTO usuarios (nombre, email, password_hash, rol)
-    VALUES ('Segundo admin', 'segundo.admin@libreria.udem.mx',
+    VALUES ('Segundo admin', 'segundo.admin@libreria.com',
             '$2b$10$c/yES5ffi.7RI/BtxEDfhezl6Sc39xn9JnMyyuGYH3GTtIjXVi.vG', 'admin');
     RAISE NOTICE 'FALLO LA PRUEBA: se creo un segundo administrador';
 EXCEPTION WHEN unique_violation THEN

@@ -30,8 +30,10 @@ sólo lo quita de la copia de trabajo.
 **Lo único que resuelve una credencial publicada es rotarla.** Concretamente:
 
 1. Las cuentas `admin@libreria.com` y `juan@ejemplo.com` desaparecen con el
-   nuevo esquema; el seed crea `admin@libreria.udem.mx` con un hash distinto,
-   cuya contraseña nunca se escribió en el repositorio.
+   nuevo esquema. El administrador actual es `admin@libreria.com`, con una
+   contraseña distinta que nunca se escribió en el repositorio y que además se
+   rotó desde la interfaz una vez terminado el despliegue, porque la del seed se
+   había comunicado por un canal de chat.
 2. Si esa misma contraseña se reutilizó en cualquier otro sitio —la VM, la base
    de datos, una cuenta personal— hay que cambiarla ahí también.
 3. Si se quiere limpiar el historial, se puede reescribir con `git filter-repo`,
