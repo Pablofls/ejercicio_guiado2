@@ -1,0 +1,15 @@
+Evidencia MN-06 — Node no es alcanzable desde internet
+Fecha: 2026-09-01
+
+En el proyecto de GCP existe una regla de firewall 'allow-3000' que abre
+el puerto 3000 a 0.0.0.0/0, sin etiqueta de destino. Aun asi, el puerto no
+responde desde fuera: Node escucha unicamente en 127.0.0.1. La proteccion
+no depende del firewall, sino de la interfaz de escucha.
+
+$ ss -tlnp | grep -E ':3000|:5432|:80 '
+LISTEN 0      511        127.0.0.1:3000      0.0.0.0:*    users:(("node",pid=2191,fd=18))
+LISTEN 0      200        127.0.0.1:5432      0.0.0.0:*                                   
+LISTEN 0      511          0.0.0.0:80        0.0.0.0:*                                   
+LISTEN 0      200            [::1]:5432         [::]:*                                   
+
+Node y PostgreSQL aparecen atados a 127.0.0.1; solo nginx escucha en 0.0.0.0.
